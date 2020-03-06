@@ -2,10 +2,28 @@
 // Created by Anders Cedronius on 2020-03-06.
 //
 
-#include "ElasticFrameProtocol.h"
+
 
 #ifndef EFPSIGNAL__EFPSIGNAL_H
 #define EFPSIGNAL__EFPSIGNAL_H
+
+#include "json.hpp"
+#include "ElasticFrameProtocol.h"
+
+using json = nlohmann::json;
+
+//Global template for getting value for key
+template <typename T>
+T getContentForKey(std::string g,json& j,json& jError, bool& jsonOK) {
+  T data;
+  try {
+    data=j[g.c_str()];
+  } catch (const std::exception& e) {
+    jError.push_back(json{g.c_str(),e.what()});
+    jsonOK=false;
+  }
+  return data;
+}
 
 class EFPSignalSend : public ElasticFrameProtocolSender {
 public:
@@ -31,19 +49,18 @@ public:
   SignalPackAndSendFromPtr(const uint8_t* pPacket, size_t packetSize, ElasticFrameContent dataContent, uint64_t pts, uint64_t dts,
                      uint32_t code, uint8_t streamID, uint8_t flags);
 
-  ///Delete copy and move constructors and assign operators
-  EFPSignalSend(EFPSignalSend const &) = delete;              // Copy construct
-  EFPSignalSend(EFPSignalSend &&) = delete;                   // Move construct
-  EFPSignalSend &operator=(EFPSignalSend const &) = delete;   // Copy assign
-  EFPSignalSend &operator=(EFPSignalSend &&) = delete;        // Move assign
-
   class EFPStreamContent {
   public:
-    explicit EFPStreamContent(int32_t ttlms) {
+
+      EFPStreamContent(int32_t ttlms) {
       mTimeToLivems = ttlms;
       mCurrentTimeToLivems = ttlms;
     }
-    virtual ~EFPStreamContent();
+
+    virtual ~EFPStreamContent(){
+
+      };
+
     bool isStillAlive(int32_t msPassed) {
       mCurrentTimeToLivems -= msPassed;
       if (mCurrentTimeToLivems <= 0 ) {
@@ -51,6 +68,7 @@ public:
       }
       return true;
     }
+    
     void resetTTL() {
       mCurrentTimeToLivems = mTimeToLivems;
     }
@@ -79,10 +97,17 @@ public:
 
   private:
     int32_t mTimeToLivems;
-    std::atomic_int32_t mCurrentTimeToLivems;
+    int32_t mCurrentTimeToLivems;
   };
 
   std::function<void(EFPStreamContent* content)> declareContentCallback = nullptr;
+  bool mDropUnknown = false;
+  bool embedStreamInfo = false;
+  uint32_t mEmbedInterval = 10; //Each value is 100ms so 10*100=1000ms once every second.
+
+  const std::string contentType="Content-Type";
+  const std::string applicationType="application/json";
+
 protected:
   int32_t mGarbageCollectms = 0;
 
@@ -95,6 +120,7 @@ private:
   std::atomic_bool mThreadRunSignal;
   std::atomic_bool mSignalThreadActive;
   std::atomic_bool mNewEntry;
+
 };
 
 #endif //EFPSIGNAL__EFPSIGNAL_H

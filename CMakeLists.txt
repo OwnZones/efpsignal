@@ -30,6 +30,7 @@ set_property(TARGET efp PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/e
 add_dependencies(efp project_efp)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/efp/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/json/)
 
 add_library(efpsignal STATIC efpsignal.cpp)
 

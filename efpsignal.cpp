@@ -26,6 +26,9 @@ EFPSignalSend::SignalPackAndSend(const std::vector<uint8_t> &rPacket, ElasticFra
                   uint8_t streamID, uint8_t flags) {
 
   if (!isKnown[dataContent][streamID]) {
+    if (mDropUnknown) {
+      return ElasticFrameMessages::efpSignalDropped;
+    }
     EFPStreamContent newContent(mGarbageCollectms);
     newContent.mGStreamID = streamID;
     newContent.mGFrameContent = dataContent;
