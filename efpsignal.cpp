@@ -21,7 +21,7 @@ EFPSignalSend::~EFPSignalSend() {
 }
 
 ElasticFrameMessages
-EFPSignalSend::SignalPackAndSend(const std::vector<uint8_t> &rPacket, ElasticFrameContent dataContent, uint64_t pts, uint64_t dts,
+EFPSignalSend::signalPackAndSend(const std::vector<uint8_t> &rPacket, ElasticFrameContent dataContent, uint64_t pts, uint64_t dts,
                   uint32_t code,
                   uint8_t streamID, uint8_t flags) {
 
@@ -37,19 +37,20 @@ EFPSignalSend::SignalPackAndSend(const std::vector<uint8_t> &rPacket, ElasticFra
     }
     efpStreamLists[streamID].push_back(newContent);
     isKnown[dataContent][streamID] = true;
-    mNewEntry = true;
+    LOGGER(true, LOGG_NOTIFY, "Added entry")
+    mStreamListChanged = true;
   }
 
   return this->packAndSend(rPacket, dataContent, pts, dts, code, streamID, flags);
 }
 
 ElasticFrameMessages
-EFPSignalSend::SignalPackAndSendFromPtr(const uint8_t* pPacket, size_t packetSize, ElasticFrameContent dataContent, uint64_t pts, uint64_t dts,
+EFPSignalSend::signalPackAndSendFromPtr(const uint8_t* pPacket, size_t packetSize, ElasticFrameContent dataContent, uint64_t pts, uint64_t dts,
                          uint32_t code, uint8_t streamID, uint8_t flags) {
 
   if (!isKnown[dataContent][streamID]) {
     isKnown[dataContent][streamID] = true;
-    mNewEntry = true;
+    mStreamListChanged = true;
   }
 
   return this->packAndSendFromPtr(pPacket, packetSize, dataContent, pts, dts, code, streamID, flags);
@@ -61,12 +62,25 @@ void EFPSignalSend::signalWorker() {
     //Run signal worker 10 times per second
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     for (auto &rGroup: efpStreamLists) {
+      int lItemIndex = 0;
       for (auto &rItems: rGroup) {
-        if(rItems.isStillAlive(100)) {
-
+        if(!rItems.isStillAlive(100)) {
+          rGroup.erase(rGroup.begin() + lItemIndex);
+          LOGGER(true, LOGG_NOTIFY, "Deleted entry")
+          mStreamListChanged = true;
+        } else {
+          lItemIndex++;
         }
       }
     }
+
+    if (mStreamListChanged) {
+      LOGGER(true, LOGG_NOTIFY, "ListChanged")
+      mStreamListChanged = false;
+    }
+
+    //Should embedd
+
   }
   mSignalThreadActive = false;
 }

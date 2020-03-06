@@ -31,7 +31,7 @@ public:
   ///Constructor
   explicit EFPSignalSend(uint16_t setMTU, uint32_t garbageCollectms ) : ElasticFrameProtocolSender(setMTU){
     mThreadRunSignal = true;
-    mNewEntry = false;
+    mStreamListChanged = false;
     efpStreamLists.reserve(256);
     mGarbageCollectms = garbageCollectms;
     startSignalWorker();
@@ -41,12 +41,12 @@ public:
   virtual ~EFPSignalSend();
 
   ElasticFrameMessages
-  SignalPackAndSend(const std::vector<uint8_t> &rPacket, ElasticFrameContent dataContent, uint64_t pts, uint64_t dts,
+  signalPackAndSend(const std::vector<uint8_t> &rPacket, ElasticFrameContent dataContent, uint64_t pts, uint64_t dts,
               uint32_t code,
               uint8_t streamID, uint8_t flags);
 
   ElasticFrameMessages
-  SignalPackAndSendFromPtr(const uint8_t* pPacket, size_t packetSize, ElasticFrameContent dataContent, uint64_t pts, uint64_t dts,
+  signalPackAndSendFromPtr(const uint8_t* pPacket, size_t packetSize, ElasticFrameContent dataContent, uint64_t pts, uint64_t dts,
                      uint32_t code, uint8_t streamID, uint8_t flags);
 
   class EFPStreamContent {
@@ -129,7 +129,7 @@ private:
   std::vector<std::vector<EFPStreamContent>> efpStreamLists;
   std::atomic_bool mThreadRunSignal;
   std::atomic_bool mSignalThreadActive;
-  std::atomic_bool mNewEntry;
+  std::atomic_bool mStreamListChanged;
 
 };
 
