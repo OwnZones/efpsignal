@@ -68,7 +68,7 @@ public:
       }
       return true;
     }
-    
+
     void resetTTL() {
       mCurrentTimeToLivems = mTimeToLivems;
     }
@@ -80,6 +80,7 @@ public:
     uint8_t mGProtectionGroupID = 0;
     uint8_t mGSyncGroupID = 0;
     uint8_t mGPriority = 0;
+    uint64_t mGNotifyHere = 0;
 
     //Video part
     uint32_t mVFrameRateNum = 0;
@@ -94,6 +95,15 @@ public:
     uint32_t mANoChannels = 0;
     uint32_t mAChannelMapping = 0;
     uint32_t mABitsPerSec = 0;
+
+    //Text part
+    uint32_t mTTextType = 0;
+    std::string mTLanguage = "";
+
+    //auX part
+    uint32_t mXType = 0;
+    std::string mXString = "";
+    uint32_t mXValue = 0;
 
   private:
     int32_t mTimeToLivems;
