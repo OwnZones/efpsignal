@@ -28,38 +28,17 @@ T getContentForKey(std::string g,json& j,json& jError, bool& jsonOK) {
 class EFPSignalSend : public ElasticFrameProtocolSender {
 public:
 
-  ///Constructor
-  explicit EFPSignalSend(uint16_t setMTU, uint32_t garbageCollectms ) : ElasticFrameProtocolSender(setMTU){
-    mThreadRunSignal = true;
-    mStreamListChanged = false;
-    efpStreamLists.reserve(256);
-    mGarbageCollectms = garbageCollectms;
-    startSignalWorker();
-  };
-
-  ///Destructor
-  virtual ~EFPSignalSend();
-
-  ElasticFrameMessages
-  signalPackAndSend(const std::vector<uint8_t> &rPacket, ElasticFrameContent dataContent, uint64_t pts, uint64_t dts,
-              uint32_t code,
-              uint8_t streamID, uint8_t flags);
-
-  ElasticFrameMessages
-  signalPackAndSendFromPtr(const uint8_t* pPacket, size_t packetSize, ElasticFrameContent dataContent, uint64_t pts, uint64_t dts,
-                     uint32_t code, uint8_t streamID, uint8_t flags);
-
   class EFPStreamContent {
   public:
 
-      EFPStreamContent(int32_t ttlms) {
+    EFPStreamContent(int32_t ttlms) {
       mTimeToLivems = ttlms;
       mCurrentTimeToLivems = ttlms;
     }
 
     virtual ~EFPStreamContent(){
 
-      };
+    };
 
     bool isStillAlive(int32_t msPassed) {
       mCurrentTimeToLivems -= msPassed;
@@ -110,6 +89,31 @@ public:
     int32_t mCurrentTimeToLivems;
   };
 
+  ///Constructor
+  explicit EFPSignalSend(uint16_t setMTU, uint32_t garbageCollectms ) : ElasticFrameProtocolSender(setMTU){
+    mThreadRunSignal = true;
+    mStreamListChanged = false;
+    efpStreamLists.reserve(256);
+    mGarbageCollectms = garbageCollectms;
+    startSignalWorker();
+  };
+
+  ///Destructor
+  virtual ~EFPSignalSend();
+
+  ElasticFrameMessages
+  packAndSend(const std::vector<uint8_t> &rPacket, ElasticFrameContent dataContent, uint64_t pts, uint64_t dts,
+              uint32_t code,
+              uint8_t streamID, uint8_t flags);
+
+  ElasticFrameMessages
+  packAndSendFromPtr(const uint8_t* pPacket, size_t packetSize, ElasticFrameContent dataContent, uint64_t pts, uint64_t dts,
+                     uint32_t code, uint8_t streamID, uint8_t flags);
+
+  ElasticFrameMessages registerContent(EFPStreamContent &content);
+  ElasticFrameMessages deleteContent(ElasticFrameContent dataContent, uint8_t streamID);
+
+
   std::function<void(EFPStreamContent* content)> declareContentCallback = nullptr;
   bool mDropUnknown = false;
   bool embedStreamInfo = false;
@@ -118,14 +122,19 @@ public:
   const std::string contentType="Content-Type";
   const std::string applicationType="application/json";
 
+  //Setings
+  bool autoRegister = true;
+
 protected:
   int32_t mGarbageCollectms = 0;
 
 private:
   void startSignalWorker();
   void signalWorker();
+  ElasticFrameMessages signalFilter(ElasticFrameContent dataContent, uint8_t streamID);
 
-  bool isKnown[256][256] = {false};
+  bool isKnown[UINT8_MAX+1][UINT8_MAX+1] = {false};
+  std::mutex mStreamListMtx; //Mutex protecting the stream lists
   std::vector<std::vector<EFPStreamContent>> efpStreamLists;
   std::atomic_bool mThreadRunSignal;
   std::atomic_bool mSignalThreadActive;
@@ -134,3 +143,8 @@ private:
 };
 
 #endif //EFPSIGNAL__EFPSIGNAL_H
+
+/*
+ * Version
+ *
+ */
