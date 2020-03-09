@@ -5,7 +5,7 @@
 
 EFPSignalSend myEFPSignalSend(MTU, 5000);
 
-void declareContent(EFPSignalSend::EFPStreamContent* content) {
+void declareContent(EFPStreamContent* content) {
   std::cout << "Declare content working" << std::endl;
   if (content->mGStreamID == 30 && content->mGFrameContent == ElasticFrameContent::h264) {
     content->mVWidth = 1920;
@@ -32,7 +32,7 @@ int main() {
     return EXIT_FAILURE;
   }
 
-  EFPSignalSend::EFPStreamContent thisEntry = myEFPSignalSend.getContent(ElasticFrameContent::h264,20);
+  EFPStreamContent thisEntry = myEFPSignalSend.getContent(ElasticFrameContent::h264,20);
   if (thisEntry.mGStreamID != 0) {
     return EXIT_FAILURE;
   }
@@ -46,8 +46,7 @@ int main() {
     return EXIT_FAILURE;
   }
 
-
-  EFPSignalSend::EFPStreamContent fakeContent(1500);
+  EFPStreamContent fakeContent(1500);
   fakeContent.mGFrameContent = ElasticFrameContent::adts;
   fakeContent.mGStreamID = 40;
   status = myEFPSignalSend.registerContent(fakeContent);
@@ -60,7 +59,7 @@ int main() {
   sleep(6);
 
   std::cout << "Add fake" << std::endl;
-  EFPSignalSend::EFPStreamContent fakeContent2(1500);
+  EFPStreamContent fakeContent2(1500);
   fakeContent2.mGFrameContent = ElasticFrameContent::adts;
   fakeContent2.mGStreamID = 0;
   status =  myEFPSignalSend.registerContent(fakeContent2);

@@ -130,7 +130,7 @@ ElasticFrameMessages EFPSignalSend::deleteContent(ElasticFrameContent dataConten
   return ElasticFrameMessages::noError;
 }
 
-EFPSignalSend::EFPStreamContent EFPSignalSend::getContent(ElasticFrameContent dataContent, uint8_t streamID) {
+EFPStreamContent EFPSignalSend::getContent(ElasticFrameContent dataContent, uint8_t streamID) {
   if (streamID == 0) {
     return 0;
   }
@@ -224,7 +224,6 @@ void EFPSignalSend::signalWorker() {
         }
       }
     }
-
 
     if (mEFPStreamListVersion != mOldEFPStreamListVersion) {
       LOGGER(true, LOGG_NOTIFY, "ListChanged")

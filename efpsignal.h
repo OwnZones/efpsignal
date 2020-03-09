@@ -28,69 +28,85 @@ T getContentForKey(std::string g,json& j,json& jError, bool& jsonOK) {
   return data;
 }
 
-class EFPSignalSend : public ElasticFrameProtocolSender {
+//---------------------------------------------------------------------------------------------------------------------
+//
+//
+// EFPStreamContent
+//
+//
+//---------------------------------------------------------------------------------------------------------------------
+
+class EFPStreamContent {
 public:
 
-  class EFPStreamContent {
-  public:
+  EFPStreamContent(int32_t ttlms) {
+    mTimeToLivems = ttlms;
+    mCurrentTimeToLivems = ttlms;
+  }
 
-    EFPStreamContent(int32_t ttlms) {
-      mTimeToLivems = ttlms;
-      mCurrentTimeToLivems = ttlms;
-    }
+  virtual ~EFPStreamContent(){
 
-    virtual ~EFPStreamContent(){
-
-    };
-
-    bool isStillAlive(int32_t msPassed) {
-      mCurrentTimeToLivems -= msPassed;
-      if (mCurrentTimeToLivems <= 0 ) {
-        return false;
-      }
-      return true;
-    }
-
-    void resetTTL() {
-      mCurrentTimeToLivems = mTimeToLivems;
-    }
-
-    //General part
-    std::string mGDescription ="";
-    ElasticFrameContent mGFrameContent = ElasticFrameContent::unknown;
-    uint8_t mGStreamID = 0;
-    uint8_t mGProtectionGroupID = 0;
-    uint8_t mGSyncGroupID = 0;
-    uint8_t mGPriority = 0;
-    uint64_t mGNotifyHere = 0;
-
-    //Video part
-    uint32_t mVFrameRateNum = 0;
-    uint32_t mVFrameRateDen = 0;
-    uint32_t mVWidth = 0;
-    uint32_t mVHeight = 0;
-    uint32_t mVBitsPerSec = 0;
-
-    //Audio part
-    uint32_t mAFreqNum = 0;
-    uint32_t mAFreqDen = 0;
-    uint32_t mANoChannels = 0;
-    uint32_t mAChannelMapping = 0;
-    uint32_t mABitsPerSec = 0;
-
-    //Text part
-    uint32_t mTTextType = 0;
-    std::string mTLanguage = "";
-
-    //auX part
-    uint32_t mXType = 0;
-    std::string mXString = "";
-    uint32_t mXValue = 0;
-
-  private:
-    int32_t mTimeToLivems;
-    int32_t mCurrentTimeToLivems;
   };
+
+  bool isStillAlive(int32_t msPassed) {
+    mCurrentTimeToLivems -= msPassed;
+    if (mCurrentTimeToLivems <= 0 ) {
+      return false;
+    }
+    return true;
+  }
+
+  void resetTTL() {
+    mCurrentTimeToLivems = mTimeToLivems;
+  }
+
+  //General part
+  std::string mGDescription ="";
+  ElasticFrameContent mGFrameContent = ElasticFrameContent::unknown;
+  uint8_t mGStreamID = 0;
+  uint8_t mGProtectionGroupID = 0;
+  uint8_t mGSyncGroupID = 0;
+  uint8_t mGPriority = 0;
+  uint64_t mGNotifyHere = 0;
+
+  //Video part
+  uint32_t mVFrameRateNum = 0;
+  uint32_t mVFrameRateDen = 0;
+  uint32_t mVWidth = 0;
+  uint32_t mVHeight = 0;
+  uint32_t mVBitsPerSec = 0;
+
+  //Audio part
+  uint32_t mAFreqNum = 0;
+  uint32_t mAFreqDen = 0;
+  uint32_t mANoChannels = 0;
+  uint32_t mAChannelMapping = 0;
+  uint32_t mABitsPerSec = 0;
+
+  //Text part
+  uint32_t mTTextType = 0;
+  std::string mTLanguage = "";
+
+  //auX part
+  uint32_t mXType = 0;
+  std::string mXString = "";
+  uint32_t mXValue = 0;
+
+private:
+  int32_t mTimeToLivems;
+  int32_t mCurrentTimeToLivems;
+};
+
+//---------------------------------------------------------------------------------------------------------------------
+//
+//
+// EFPSignal Sender
+//
+//
+//---------------------------------------------------------------------------------------------------------------------
+
+class EFPSignalSend : public ElasticFrameProtocolSender {
+public:
 
   ///Constructor
   explicit EFPSignalSend(uint16_t setMTU, uint32_t garbageCollectms ) : ElasticFrameProtocolSender(setMTU){
@@ -143,6 +159,21 @@ private:
   std::vector<std::vector<EFPStreamContent>> efpStreamLists;
   std::atomic_bool mThreadRunSignal;
   std::atomic_bool mSignalThreadActive;
+};
+
+//---------------------------------------------------------------------------------------------------------------------
+//
+//
+// EFPSignal Receiver
+//
+//
+//---------------------------------------------------------------------------------------------------------------------
+
+class EFPSignalReceive : public ElasticFrameProtocolReceiver {
+public:
+
+
+private:
 };
 
 #endif //EFPSIGNAL__EFPSIGNAL_H
