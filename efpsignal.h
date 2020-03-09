@@ -10,6 +10,9 @@
 #include "json.hpp"
 #include "ElasticFrameProtocol.h"
 
+//A uint32_t value
+#define EFP_SIGNAL_VERSION 1
+
 using json = nlohmann::json;
 
 //Global template for getting value for key
@@ -92,7 +95,6 @@ public:
   ///Constructor
   explicit EFPSignalSend(uint16_t setMTU, uint32_t garbageCollectms ) : ElasticFrameProtocolSender(setMTU){
     mThreadRunSignal = true;
-    mStreamListChanged = false;
     efpStreamLists.reserve(256);
     mGarbageCollectms = garbageCollectms;
     startSignalWorker();
@@ -113,17 +115,17 @@ public:
   ElasticFrameMessages registerContent(EFPStreamContent &content);
   ElasticFrameMessages deleteContent(ElasticFrameContent dataContent, uint8_t streamID);
 
+  json generateStreamInfo(EFPStreamContent &content);
+  json generateAllStreamInfo();
 
   std::function<void(EFPStreamContent* content)> declareContentCallback = nullptr;
-  bool mDropUnknown = false;
-  bool embedStreamInfo = false;
-  uint32_t mEmbedInterval = 10; //Each value is 100ms so 10*100=1000ms once every second.
-
-  const std::string contentType="Content-Type";
-  const std::string applicationType="application/json";
 
   //Setings
-  bool autoRegister = true;
+  bool mDropUnknown = false;
+  bool mAutoRegister = true;
+  bool mEmbeddInStream = true;
+  bool mEmbeddOnlyChanges = false;
+  uint32_t mEmbedInterval100msSteps = 1;
 
 protected:
   int32_t mGarbageCollectms = 0;
@@ -133,13 +135,13 @@ private:
   void signalWorker();
   ElasticFrameMessages signalFilter(ElasticFrameContent dataContent, uint8_t streamID);
 
+  uint32_t mEFPStreamListVersion = 1;
+  uint32_t mOldEFPStreamListVersion = 1;
   bool isKnown[UINT8_MAX+1][UINT8_MAX+1] = {false};
   std::mutex mStreamListMtx; //Mutex protecting the stream lists
   std::vector<std::vector<EFPStreamContent>> efpStreamLists;
   std::atomic_bool mThreadRunSignal;
   std::atomic_bool mSignalThreadActive;
-  std::atomic_bool mStreamListChanged;
-
 };
 
 #endif //EFPSIGNAL__EFPSIGNAL_H

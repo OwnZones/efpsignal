@@ -25,8 +25,7 @@ ElasticFrameMessages EFPSignalSend::signalFilter(ElasticFrameContent dataContent
     if (mDropUnknown) {
       return ElasticFrameMessages::efpSignalDropped;
     }
-    if (autoRegister) {
-
+    if (mAutoRegister) {
       EFPStreamContent newContent(mGarbageCollectms);
       newContent.mGStreamID = streamID;
       newContent.mGFrameContent = dataContent;
@@ -37,7 +36,7 @@ ElasticFrameMessages EFPSignalSend::signalFilter(ElasticFrameContent dataContent
       efpStreamLists[streamID].push_back(newContent);
       isKnown[streamID][dataContent] = true;
       LOGGER(true, LOGG_NOTIFY, "Added entry")
-      mStreamListChanged = true;
+      mEFPStreamListVersion++;
     }
   }
   return ElasticFrameMessages::noError;
@@ -53,9 +52,9 @@ EFPSignalSend::packAndSend(const std::vector<uint8_t> &rPacket,
                            uint8_t streamID,
                            uint8_t flags) {
 
-  ElasticFrameMessages signalMess = signalFilter(dataContent, streamID);
-  if (signalMess != ElasticFrameMessages::noError) {
-    return signalMess;
+  ElasticFrameMessages signalMsg= signalFilter(dataContent, streamID);
+  if (signalMsg != ElasticFrameMessages::noError) {
+    return signalMsg;
   }
   return ElasticFrameProtocolSender::packAndSend(rPacket, dataContent, pts, dts, code, streamID, flags);
 }
@@ -69,9 +68,9 @@ EFPSignalSend::packAndSendFromPtr(const uint8_t *pPacket,
                                   uint32_t code,
                                   uint8_t streamID,
                                   uint8_t flags) {
-  ElasticFrameMessages signalMess = signalFilter(dataContent, streamID);
-  if (signalMess != ElasticFrameMessages::noError) {
-    return signalMess;
+  ElasticFrameMessages signalMsg = signalFilter(dataContent, streamID);
+  if (signalMsg != ElasticFrameMessages::noError) {
+    return signalMsg;
   }
   return ElasticFrameProtocolSender::packAndSendFromPtr(pPacket,
                                                         packetSize,
@@ -84,21 +83,30 @@ EFPSignalSend::packAndSendFromPtr(const uint8_t *pPacket,
 }
 
 ElasticFrameMessages EFPSignalSend::registerContent(EFPStreamContent &content) {
-  std::lock_guard<std::mutex> lock(mStreamListMtx);
   uint8_t streamID = content.mGStreamID;
-  ElasticFrameContent dataContent = content.mGFrameContent;
+  if (streamID == 0) {
+    return ElasticFrameMessages::reservedStreamValue;
+  }
 
+  ElasticFrameContent dataContent = content.mGFrameContent;
   if (isKnown[streamID][dataContent]) {
     return ElasticFrameMessages::contentAlreadyListed;
   }
+
+  std::lock_guard<std::mutex> lock(mStreamListMtx);
   efpStreamLists[streamID].push_back(content);
   isKnown[streamID][dataContent] = true;
+  mEFPStreamListVersion++;
   LOGGER(true, LOGG_NOTIFY, "Added entry")
-  mStreamListChanged = true;
   return ElasticFrameMessages::noError;
 }
 
 ElasticFrameMessages EFPSignalSend::deleteContent(ElasticFrameContent dataContent, uint8_t streamID){
+
+  if (streamID == 0) {
+    return ElasticFrameMessages::reservedStreamValue;
+  }
+
   std::lock_guard<std::mutex> lock(mStreamListMtx);
 
   if (!isKnown[streamID][dataContent]) {
@@ -111,12 +119,11 @@ ElasticFrameMessages EFPSignalSend::deleteContent(ElasticFrameContent dataConten
       streamContent->erase(streamContent->begin() + lItemIndex);
       LOGGER(true, LOGG_NOTIFY, "Deleted entry")
       isKnown[streamID][dataContent] = false;
-      mStreamListChanged = true;
+      mEFPStreamListVersion++;
     } else {
       lItemIndex++;
     }
   }
-
   if (isKnown[streamID][dataContent]) {
     return ElasticFrameMessages::deleteContentFail;
   }
@@ -124,13 +131,66 @@ ElasticFrameMessages EFPSignalSend::deleteContent(ElasticFrameContent dataConten
 }
 
 
+json EFPSignalSend::generateStreamInfo(EFPStreamContent &content) {
+  json jsonStream;
+
+  //General part
+  jsonStream["gdescription_str"] = content.mGDescription;
+  jsonStream["gframecontent_u8"] = content.mGFrameContent;
+  jsonStream["gstreamid_u8"] = content.mGStreamID;
+  jsonStream["gprotectiongroup_u8"] = content.mGProtectionGroupID = 0;
+  jsonStream["gsyncgroup_u8"] = content.mGSyncGroupID = 0;
+  jsonStream["gpriority_u8"] = content.mGPriority = 0;
+  jsonStream["gnotifyhere_u64"] = content.mGNotifyHere = 0;
+
+  //Video part
+  jsonStream["vratenum_u32"] = content.mVFrameRateNum = 0;
+  jsonStream["vrateden_u32"] = content.mVFrameRateDen = 0;
+  jsonStream["vwidth_u32"] = content.mVWidth = 0;
+  jsonStream["vheight_u32"] = content.mVHeight = 0;
+  jsonStream["vbps_u32"] = content.mVBitsPerSec = 0;
+
+  //Audio part
+  jsonStream["afreqnum_u32"] = content.mAFreqNum = 0;
+  jsonStream["afreqden_u32"] = content.mAFreqDen = 0;
+  jsonStream["anoch_u32"] = content.mANoChannels = 0;
+  jsonStream["achmap_u32"] = content.mAChannelMapping = 0;
+  jsonStream["abps_u32"] = content.mABitsPerSec = 0;
+
+  //Text part
+  jsonStream["ttype_u32"] = content.mTTextType = 0;
+  jsonStream["tlang_str"] = content.mTLanguage = "";
+
+  //auX part
+  jsonStream["xtype_u32"] = content.mXType = 0;
+  jsonStream["xstr_str"] = content.mXString = "";
+  jsonStream["xval_u32"] = content.mXValue = 0;
+  return jsonStream;
+}
+
+json EFPSignalSend::generateAllStreamInfo() {
+  json jsonAllStreams, tempStreams;
+  for (int x = 0; x < UINT8_MAX; x++) {
+    std::vector<EFPStreamContent> *streamContent = &efpStreamLists[x];
+    if (streamContent->size()) {
+      for (auto &rItems: *streamContent) {
+        json jsonStream = generateStreamInfo(rItems);
+        tempStreams.push_back(jsonStream);
+      }
+    }
+  }
+  jsonAllStreams["efpstreamversion"] = mEFPStreamListVersion;
+  jsonAllStreams["efpsignalversion"] = EFP_SIGNAL_VERSION;
+  jsonAllStreams["efpstreams"] = tempStreams;
+  return jsonAllStreams;
+}
 
 void EFPSignalSend::signalWorker() {
   mSignalThreadActive = true;
   while (mThreadRunSignal) {
     //Run signal worker 10 times per second
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    
+
     mStreamListMtx.lock();
     for (int x = 0; x < UINT8_MAX; x++) {
       std::vector<EFPStreamContent> *streamContent = &efpStreamLists[x];
@@ -140,19 +200,21 @@ void EFPSignalSend::signalWorker() {
           if (!rItems.isStillAlive(100)) {
             streamContent->erase(streamContent->begin() + lItemIndex);
             LOGGER(true, LOGG_NOTIFY, "Deleted entry")
-            mStreamListChanged = true;
+            mEFPStreamListVersion++;
           } else {
             lItemIndex++;
           }
         }
       }
     }
-    mStreamListMtx.unlock();
 
-    if (mStreamListChanged) {
+
+    if (mEFPStreamListVersion != mOldEFPStreamListVersion) {
       LOGGER(true, LOGG_NOTIFY, "ListChanged")
-      mStreamListChanged = false;
+      mOldEFPStreamListVersion = mEFPStreamListVersion;
     }
+
+    mStreamListMtx.unlock();
     //Should embedd
   }
   mSignalThreadActive = false;
