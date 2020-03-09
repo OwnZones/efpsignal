@@ -114,6 +114,7 @@ public:
 
   ElasticFrameMessages registerContent(EFPStreamContent &content);
   ElasticFrameMessages deleteContent(ElasticFrameContent dataContent, uint8_t streamID);
+  EFPStreamContent getContent(ElasticFrameContent dataContent, uint8_t streamID);
 
   json generateStreamInfo(EFPStreamContent &content);
   json generateAllStreamInfo();

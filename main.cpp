@@ -7,6 +7,10 @@ EFPSignalSend myEFPSignalSend(MTU, 5000);
 
 void declareContent(EFPSignalSend::EFPStreamContent* content) {
   std::cout << "Declare content working" << std::endl;
+  if (content->mGStreamID == 30 && content->mGFrameContent == ElasticFrameContent::h264) {
+    content->mVWidth = 1920;
+    content->mVHeight = 1080;
+  }
 }
 
 void sendData(const std::vector<uint8_t> &subPacket) {
@@ -20,15 +24,36 @@ int main() {
 
   myEFPSignalSend.declareContentCallback = std::bind(&declareContent, std::placeholders::_1);
   myEFPSignalSend.sendCallback = std::bind(&sendData, std::placeholders::_1);
+
   std::vector<uint8_t>sendMe;
   sendMe.reserve(4000);
-  myEFPSignalSend.packAndSend(sendMe,ElasticFrameContent::h264,100,100,EFP_CODE('A','N','X','B'),100,0);
+  status = myEFPSignalSend.packAndSend(sendMe,ElasticFrameContent::h264,100,100,EFP_CODE('A','N','X','B'),30,0);
+  if (status != ElasticFrameMessages::noError) {
+    return EXIT_FAILURE;
+  }
+
+  EFPSignalSend::EFPStreamContent thisEntry = myEFPSignalSend.getContent(ElasticFrameContent::h264,20);
+  if (thisEntry.mGStreamID != 0) {
+    return EXIT_FAILURE;
+  }
+
+  thisEntry = myEFPSignalSend.getContent(ElasticFrameContent::h264,30);
+  if (thisEntry.mGStreamID != 30) {
+    return EXIT_FAILURE;
+  }
+
+  if (thisEntry.mVWidth != 1920 || thisEntry.mVHeight != 1080) {
+    return EXIT_FAILURE;
+  }
+
 
   EFPSignalSend::EFPStreamContent fakeContent(1500);
   fakeContent.mGFrameContent = ElasticFrameContent::adts;
   fakeContent.mGStreamID = 40;
-  myEFPSignalSend.registerContent(fakeContent);
-
+  status = myEFPSignalSend.registerContent(fakeContent);
+  if (status != ElasticFrameMessages::noError) {
+    return EXIT_FAILURE;
+  }
   sleep(1);
   json myStreamInfo = myEFPSignalSend.generateAllStreamInfo();
   std::cout << myStreamInfo.dump() << std::endl;
