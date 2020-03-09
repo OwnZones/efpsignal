@@ -14,26 +14,17 @@ void declareContent(EFPStreamContent* content) {
   }
 }
 
+void gotContentInformation(EFPSignalReceive::EFPSignalReceiveData contentInformation) {
+  std::cout << "Declare content reciever callback" << std::endl;
+
+}
+
 void sendData(const std::vector<uint8_t> &subPacket, uint8_t streamID) {
   myEFPSignalReceive.receiveFragment(subPacket,0);
 }
 
 void gotData(ElasticFrameProtocolReceiver::pFramePtr &packet) {
-  if (packet->mDataContent == ElasticFrameContent::efpsig) {
-    std::cout << "got signaling data" << std::endl;
-    uint32_t signalVersion = 0;
-    uint32_t streamVersion = 0;
-    std::vector<EFPStreamContent> thisList = myEFPSignalReceive.getStreamInformation(packet->pFrameData,packet->mFrameSize,&signalVersion,&streamVersion);
 
-    for (auto& element : thisList) {
-      if (element.mGStreamID == 30 && element.mVWidth != 1920 && element.mVHeight != 1080) {
-        std::cout << "Embedded content failure" << std::endl;
-        testFail = true;
-      }
-    }
-
-    return;
-  }
   std::cout << "gotData" << std::endl;
 }
 
@@ -50,6 +41,7 @@ int main() {
   myEFPSignalSend.declareContentCallback = std::bind(&declareContent, std::placeholders::_1);
   myEFPSignalSend.sendCallback = std::bind(&sendData, std::placeholders::_1, std::placeholders::_2);
   myEFPSignalReceive.receiveCallback = std::bind(&gotData, std::placeholders::_1);
+  myEFPSignalReceive.contentInformationCallback = std::bind(&gotContentInformation, std::placeholders::_1);
 
   std::vector<uint8_t>sendMe(4000);
 

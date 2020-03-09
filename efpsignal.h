@@ -182,6 +182,13 @@ private:
 class EFPSignalReceive : public ElasticFrameProtocolReceiver {
 public:
 
+  class EFPSignalReceiveData {
+  public:
+    uint32_t signalVersion = 0;
+    uint32_t streamVersion = 0;
+    std::vector<EFPStreamContent> contentList;
+  };
+
   ///Constructor
   explicit EFPSignalReceive();
 
@@ -189,7 +196,10 @@ public:
   virtual ~EFPSignalReceive();
 
   uint32_t signalVersion();
-  std::vector<EFPStreamContent> getStreamInformation(uint8_t*, size_t, uint32_t*, uint32_t*);
+  ElasticFrameMessages getStreamInformation(uint8_t *data, size_t size, EFPSignalReceiveData* parsedData);
+
+  std::function<void(pFramePtr &rPacket)> receiveCallback = nullptr;
+  std::function<void(EFPSignalReceiveData data)> contentInformationCallback = nullptr;
 
   ///Delete copy and move constructors and assign operators
   EFPSignalReceive(EFPSignalReceive const &) = delete;              // Copy construct
@@ -198,7 +208,7 @@ public:
   EFPSignalReceive &operator=(EFPSignalReceive &&) = delete;        // Move assign
 
 private:
-
+  void gotData(ElasticFrameProtocolReceiver::pFramePtr &packet);
 };
 
 #endif //EFPSIGNAL__EFPSIGNAL_H

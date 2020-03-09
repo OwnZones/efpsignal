@@ -275,7 +275,6 @@ void EFPSignalSend::signalWorker() {
       }
     }
 
-
     mEmbedInterval100msStepsFireCounter--;
   }
   mSignalThreadActive = false;
@@ -295,6 +294,7 @@ void EFPSignalSend::startSignalWorker() {
 //---------------------------------------------------------------------------------------------------------------------
 
 EFPSignalReceive::EFPSignalReceive() {
+  ElasticFrameProtocolReceiver::receiveCallback = std::bind(&EFPSignalReceive::gotData, this, std::placeholders::_1);
   LOGGER(true, LOGG_NOTIFY, "EFPSignalReceive construct")
 };
 
@@ -306,29 +306,30 @@ uint32_t EFPSignalReceive::signalVersion() {
   return EFP_SIGNAL_VERSION;
 }
 
-std::vector<EFPStreamContent> EFPSignalReceive::getStreamInformation(uint8_t *data, size_t size, uint32_t* signalVersion, uint32_t* streamVersion) {
+ElasticFrameMessages EFPSignalReceive::getStreamInformation(uint8_t *data, size_t size, EFPSignalReceive::EFPSignalReceiveData* parsedData) {
   bool jsonOK = true;
-  std::vector<EFPStreamContent> list;
-  std::string content((const char *)data,(const char *)data + size);
-  json j,jError;
+  std::string content((const char *) data, (const char *) data + size);
+  json j, jError;
 
   try {
     j = json::parse(content.c_str());
   } catch (const std::exception &e) {
     LOGGER(true, LOGG_ERROR, "Error reading json data -> " << e.what())
-    return list;
+    return ElasticFrameMessages::contentNotListed; //Fixme
   }
 
-  *signalVersion = getContentForKey<uint32_t>("efpsignalversion_u32", j, jError, jsonOK);
-  if(!jsonOK)return list;
-  *streamVersion = getContentForKey<uint32_t>("efpstreamversion_u32", j, jError, jsonOK);
-  if(!jsonOK)return list;
+  parsedData->signalVersion = getContentForKey<uint32_t>("efpsignalversion_u32", j, jError, jsonOK);
+  if (!jsonOK)
+    return ElasticFrameMessages::contentNotListed; //Fixme
+  parsedData->streamVersion = getContentForKey<uint32_t>("efpstreamversion_u32", j, jError, jsonOK);
+  if (!jsonOK)
+    return ElasticFrameMessages::contentNotListed; //Fixme
   //auto streams = getContentForKey<std::string>("efpstreams_arr", j, jError, jsonOK);
 
   try {
     auto streams = j["efpstreams_arr"];
 
-    for (auto& element : streams) {
+    for (auto &element : streams) {
       EFPStreamContent newContent(UINT32_MAX);
       //General part
       newContent.mGDescription = getContentForKey<std::string>("gdescription_str", element, jError, jsonOK);
@@ -337,7 +338,7 @@ std::vector<EFPStreamContent> EFPSignalReceive::getStreamInformation(uint8_t *da
       newContent.mGProtectionGroupID = getContentForKey<uint8_t>("gprotectiongroup_u8", element, jError, jsonOK);
       newContent.mGSyncGroupID = getContentForKey<uint8_t>("gsyncgroup_u8", element, jError, jsonOK);
       newContent.mGPriority = getContentForKey<uint8_t>("gpriority_u8", element, jError, jsonOK);
-      newContent.mGNotifyHere = getContentForKey<uint64_t >("gnotifyhere_u64", element, jError, jsonOK);
+      newContent.mGNotifyHere = getContentForKey<uint64_t>("gnotifyhere_u64", element, jError, jsonOK);
 
       //Video part
       newContent.mVFrameRateNum = getContentForKey<uint32_t>("vratenum_u32", element, jError, jsonOK);
@@ -362,7 +363,7 @@ std::vector<EFPStreamContent> EFPSignalReceive::getStreamInformation(uint8_t *da
       newContent.mXValue = getContentForKey<uint32_t>("xval_u32", element, jError, jsonOK);
 
       if (jsonOK) {
-        list.push_back(newContent);
+        parsedData->contentList.push_back(newContent);
       } else {
         LOGGER(true, LOGG_ERROR, "ERROR parsing EFPStreamContent")
         jsonOK = true;
@@ -370,7 +371,34 @@ std::vector<EFPStreamContent> EFPSignalReceive::getStreamInformation(uint8_t *da
     }
   } catch (const std::exception &e) {
     LOGGER(true, LOGG_ERROR, "Error reading json data -> " << e.what())
-    return list;
+    return ElasticFrameMessages::contentNotListed;
   }
-    return list;
+  return ElasticFrameMessages::noError;
+}
+
+void EFPSignalReceive::gotData(ElasticFrameProtocolReceiver::pFramePtr &packet) {
+  if (packet->mDataContent == ElasticFrameContent::efpsig) {
+//    std::cout << "got signaling data" << std::endl;
+
+    if (this->contentInformationCallback) {
+      EFPSignalReceiveData dataFromEFPSignal;
+      ElasticFrameMessages status = getStreamInformation(packet->pFrameData, packet->mFrameSize, &dataFromEFPSignal);
+      if (status != ElasticFrameMessages::noError) {
+        LOGGER(true, LOGG_ERROR, "ERROR parsing EFPStreamContent")
+        return;
+      }
+
+      this->contentInformationCallback(dataFromEFPSignal);
+      return;
+
+    } else {
+      LOGGER(true, LOGG_ERROR, "contentInformationCallback not defined")
+      return;
+
+  }
+
+    if (this->receiveCallback) {
+      this->receiveCallback(packet);
+    }
+  }
 }
