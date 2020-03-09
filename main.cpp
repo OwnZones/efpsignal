@@ -6,6 +6,7 @@
 EFPSignalReceive myEFPSignalReceive; //Needs to be destructed after the sender to avoid races in the tests.
 bool testFail;
 
+//If its ID 30 then set width and height
 void declareContent(EFPStreamContent* content) {
   std::cout << "Declare content" << std::endl;
   if (content->mGStreamID == 30 && content->mGFrameContent == ElasticFrameContent::h264) {
@@ -14,17 +15,24 @@ void declareContent(EFPStreamContent* content) {
   }
 }
 
-void gotContentInformation(EFPSignalReceive::EFPSignalReceiveData contentInformation) {
+//Check if we got that info in the receiver.
+void gotContentInformation(std::unique_ptr<EFPSignalReceive::EFPSignalReceiveData>& data) {
   std::cout << "Declare content reciever callback" << std::endl;
-
+  for (auto &rItem: data->contentList) {
+    if (rItem.mGStreamID == 30 && rItem.mVWidth != 1920 && rItem.mVHeight != 1080) {
+      std::cout << "Content not as expected" << std::endl;
+      testFail = true;
+    }
+  }
 }
 
+//Normal EFP send
 void sendData(const std::vector<uint8_t> &subPacket, uint8_t streamID) {
   myEFPSignalReceive.receiveFragment(subPacket,0);
 }
 
+//Normal EFP Receive
 void gotData(ElasticFrameProtocolReceiver::pFramePtr &packet) {
-
   std::cout << "gotData" << std::endl;
 }
 

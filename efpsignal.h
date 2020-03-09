@@ -131,7 +131,7 @@ public:
   ElasticFrameMessages registerContent(EFPStreamContent &content);
   ElasticFrameMessages deleteContent(ElasticFrameContent dataContent, uint8_t streamID);
   EFPStreamContent getContent(ElasticFrameContent dataContent, uint8_t streamID);
-  json generateStreamInfoFromBinary(EFPStreamContent &content);
+  json generateStreamInfo(EFPStreamContent &content);
   json generateAllStreamInfo();
   uint32_t signalVersion();
 
@@ -196,10 +196,10 @@ public:
   virtual ~EFPSignalReceive();
 
   uint32_t signalVersion();
-  ElasticFrameMessages getStreamInformation(uint8_t *data, size_t size, EFPSignalReceiveData* parsedData);
+  ElasticFrameMessages getStreamInformation(uint8_t *data, size_t size, std::unique_ptr<EFPSignalReceiveData>& parsedData);
 
   std::function<void(pFramePtr &rPacket)> receiveCallback = nullptr;
-  std::function<void(EFPSignalReceiveData data)> contentInformationCallback = nullptr;
+  std::function<void(std::unique_ptr<EFPSignalReceiveData>& data)> contentInformationCallback = nullptr;
 
   ///Delete copy and move constructors and assign operators
   EFPSignalReceive(EFPSignalReceive const &) = delete;              // Copy construct

@@ -113,9 +113,7 @@ ElasticFrameMessages EFPSignalSend::deleteContent(ElasticFrameContent dataConten
   if (streamID == 0) {
     return ElasticFrameMessages::reservedStreamValue;
   }
-
   std::lock_guard<std::mutex> lock(mStreamListMtx);
-
   if (!mIsKnown[streamID][dataContent]) {
     return ElasticFrameMessages::contentNotListed;
   }
@@ -155,7 +153,7 @@ EFPStreamContent EFPSignalSend::getContent(ElasticFrameContent dataContent, uint
   return 0;
 }
 
-json EFPSignalSend::generateStreamInfoFromBinary(EFPStreamContent &content) {
+json EFPSignalSend::generateStreamInfo(EFPStreamContent &content) {
   json jsonStream;
 
   //General part
@@ -203,7 +201,7 @@ json EFPSignalSend::generateAllStreamInfo() {
     std::vector<EFPStreamContent> *streamContent = &mEFPStreamLists[x];
     if (streamContent->size()) {
       for (auto &rItems: *streamContent) {
-        json jsonStream = generateStreamInfoFromBinary(rItems);
+        json jsonStream = generateStreamInfo(rItems);
         tempStreams.push_back(jsonStream);
       }
     }
@@ -306,7 +304,7 @@ uint32_t EFPSignalReceive::signalVersion() {
   return EFP_SIGNAL_VERSION;
 }
 
-ElasticFrameMessages EFPSignalReceive::getStreamInformation(uint8_t *data, size_t size, EFPSignalReceive::EFPSignalReceiveData* parsedData) {
+ElasticFrameMessages EFPSignalReceive::getStreamInformation(uint8_t *data, size_t size, std::unique_ptr<EFPSignalReceiveData>& parsedData) {
   bool jsonOK = true;
   std::string content((const char *) data, (const char *) data + size);
   json j, jError;
@@ -381,14 +379,15 @@ void EFPSignalReceive::gotData(ElasticFrameProtocolReceiver::pFramePtr &packet) 
 //    std::cout << "got signaling data" << std::endl;
 
     if (this->contentInformationCallback) {
-      EFPSignalReceiveData dataFromEFPSignal;
-      ElasticFrameMessages status = getStreamInformation(packet->pFrameData, packet->mFrameSize, &dataFromEFPSignal);
+
+      std::unique_ptr<EFPSignalReceiveData> myData = std::make_unique<EFPSignalReceiveData>();
+      ElasticFrameMessages status = getStreamInformation(packet->pFrameData, packet->mFrameSize, myData);
       if (status != ElasticFrameMessages::noError) {
         LOGGER(true, LOGG_ERROR, "ERROR parsing EFPStreamContent")
         return;
       }
 
-      this->contentInformationCallback(dataFromEFPSignal);
+      this->contentInformationCallback(myData);
       return;
 
     } else {
