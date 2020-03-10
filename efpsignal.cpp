@@ -29,7 +29,6 @@ EFPSignalSend::~EFPSignalSend() {
   LOGGER(true, LOGG_NOTIFY, "EFPSignal destruct")
 }
 
-//Fixme reset timer!!! Else the item will autotimeout
 ElasticFrameMessages EFPSignalSend::signalFilter(ElasticFrameContent dataContent, uint8_t streamID) {
   if (!mIsKnown[streamID][dataContent]) {
     if (mAutoRegister) {
@@ -47,6 +46,15 @@ ElasticFrameMessages EFPSignalSend::signalFilter(ElasticFrameContent dataContent
     }
     if (mDropUnknown) {
       return ElasticFrameMessages::efpSignalDropped;
+    }
+  } else {
+    std::lock_guard<std::mutex> lock(mStreamListMtx);
+    std::vector<EFPStreamContent> *streamContent = &mEFPStreamLists[streamID];
+    for (auto &rItems: *streamContent) {
+      if (rItems.mVariables.mGFrameContent == dataContent) {
+        rItems.resetTTL();
+        break;
+      }
     }
   }
   return ElasticFrameMessages::noError;
@@ -309,15 +317,15 @@ ElasticFrameMessages EFPSignalReceive::getStreamInformation(uint8_t *data, size_
     j = json::parse(content.c_str());
   } catch (const std::exception &e) {
     LOGGER(true, LOGG_ERROR, "Error reading json data -> " << e.what())
-    return ElasticFrameMessages::contentNotListed; //Fixme
+    return ElasticFrameMessages::dataNotJSON;
   }
 
   parsedData->signalVersion = getContentForKey<uint32_t>("efpsignalversion_u32", j, jError, jsonOK);
   if (!jsonOK)
-    return ElasticFrameMessages::contentNotListed; //Fixme
+    return ElasticFrameMessages::noDataForKey;
   parsedData->streamVersion = getContentForKey<uint32_t>("efpstreamversion_u32", j, jError, jsonOK);
   if (!jsonOK)
-    return ElasticFrameMessages::contentNotListed; //Fixme
+    return ElasticFrameMessages::noDataForKey;
   //auto streams = getContentForKey<std::string>("efpstreams_arr", j, jError, jsonOK);
 
   try {
@@ -365,7 +373,7 @@ ElasticFrameMessages EFPSignalReceive::getStreamInformation(uint8_t *data, size_
     }
   } catch (const std::exception &e) {
     LOGGER(true, LOGG_ERROR, "Error reading json data -> " << e.what())
-    return ElasticFrameMessages::contentNotListed;
+    return ElasticFrameMessages::noDataForKey;
   }
   return ElasticFrameMessages::noError;
 }
