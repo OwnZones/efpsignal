@@ -33,6 +33,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/efp/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/json/)
 
 add_library(efpsignal STATIC efpsignal.cpp)
+target_link_libraries(efpsignal efp)
 
-add_executable(efpsignaltests main.cpp)
-target_link_libraries(efpsignaltests efp efpsignal)
+add_executable(efpsignalsimplextests simplex.cpp)
+target_link_libraries(efpsignalsimplextests efpsignal)
+
+add_executable(efpsignalduplextests duplex.cpp)
+target_link_libraries(efpsignalduplextests efpsignal)
