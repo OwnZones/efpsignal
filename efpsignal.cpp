@@ -7,7 +7,6 @@
 
 
 //Global
-
 void EFPSignalExtraktValuesForKeyV1(EFPStreamContent *newContent, json &element, json *jError, bool *jsonOK) {
 
   //General part
@@ -302,7 +301,7 @@ std::unique_ptr<std::vector<uint8_t>> EFPSignalSend::generateAllStreamInfoData()
 }
 
 void EFPSignalSend::sendEmbeddedData() {
-  if (mEmbeddBinary) {
+  if (mEmbedBinary) {
     auto rawData = generateAllStreamInfoData();
     ElasticFrameProtocolSender::packAndSend(*rawData,
                                             ElasticFrameContent::efpsig,
@@ -357,8 +356,8 @@ void EFPSignalSend::signalWorker() {
 
     if (!mEmbedInterval100msStepsFireCounter) {
       mEmbedInterval100msStepsFireCounter = mEmbedInterval100msSteps;
-      if (mEmbeddInStream) {
-        if (mEmbeddOnlyChanges && mChangeDetected) {
+      if (mEmbedInStream) {
+        if (mEmbedOnlyChanges && mChangeDetected) {
           mChangeDetected = false;
           sendEmbeddedData();
         } else {
@@ -466,7 +465,6 @@ ElasticFrameMessages EFPSignalReceive::getStreamInformationData(uint8_t *data,
 
 void EFPSignalReceive::gotData(ElasticFrameProtocolReceiver::pFramePtr &packet) {
   if (packet->mDataContent == ElasticFrameContent::efpsig) {
-//    std::cout << "got signaling data" << std::endl;
     if (this->contentInformationCallback) {
       std::unique_ptr<EFPSignalReceiveData> myData = std::make_unique<EFPSignalReceiveData>();
       if (packet->mCode == EFP_CODE('J','S','O','N')) {

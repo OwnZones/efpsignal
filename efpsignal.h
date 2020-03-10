@@ -160,9 +160,9 @@ public:
   //Setings
   bool mDropUnknown = false;
   bool mAutoRegister = true;
-  bool mEmbeddInStream = true;
-  bool mEmbeddOnlyChanges = false;
-  bool mEmbeddBinary = false;
+  bool mEmbedInStream = true;
+  bool mEmbedOnlyChanges = false;
+  bool mEmbedBinary = false;
   uint32_t mEmbedInterval100msSteps = 1;
 
 protected:
