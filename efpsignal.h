@@ -61,7 +61,6 @@ public:
   }
 
   struct Variables {
-    uint32_t binaryVersion = EFP_SIGNAL_VERSION;
     //General part
     std::string mGDescription = "";
     ElasticFrameContent mGFrameContent = ElasticFrameContent::unknown;
@@ -94,6 +93,15 @@ public:
     std::string mXString = "";
     uint32_t mXValue = 0;
   } mVariables;
+
+  struct BinaryHeaderV1 {
+  public:
+    const uint16_t mHeaderVersion = 1; //This entry may not move in new versions
+    const uint32_t mEFPSignalversion = EFP_SIGNAL_VERSION;
+    uint32_t mEFPStreamVersion = 0;
+    uint32_t mNumBlocks = 0;
+    const uint32_t mVariablesSize = sizeof(Variables);
+  };
 
 private:
   int32_t mTimeToLivems;
@@ -135,10 +143,12 @@ public:
   ElasticFrameMessages deleteContent(ElasticFrameContent dataContent, uint8_t streamID);
   EFPStreamContent getContent(ElasticFrameContent dataContent, uint8_t streamID);
   json generateStreamInfo(EFPStreamContent &content);
-  json generateAllStreamInfo();
+  json generateAllStreamInfoJSON();
+  std::unique_ptr<std::vector<uint8_t>> generateAllStreamInfoData();
+
   uint32_t signalVersion();
 
-  std::function<void(EFPStreamContent* content)> declareContentCallback = nullptr;
+  std::function<bool(EFPStreamContent* content)> declareContentCallback = nullptr;
 
   ///Delete copy and move constructors and assign operators
   EFPSignalSend(EFPSignalSend const &) = delete;              // Copy construct
@@ -151,7 +161,6 @@ public:
   bool mAutoRegister = true;
   bool mEmbeddInStream = true;
   bool mEmbeddOnlyChanges = false;
-  bool mChangeDetected = false;
   bool mEmbeddBinary = false;
   uint32_t mEmbedInterval100msSteps = 1;
 
@@ -161,9 +170,10 @@ protected:
 private:
   void startSignalWorker();
   void signalWorker();
+  void sendEmbeddedData();
   ElasticFrameMessages signalFilter(ElasticFrameContent dataContent, uint8_t streamID);
 
-
+  bool mChangeDetected = false;
   uint32_t mEmbedInterval100msStepsFireCounter = 0;
   uint32_t mEFPStreamListVersion = 1;
   uint32_t mOldEFPStreamListVersion = 1;
@@ -201,7 +211,8 @@ public:
   virtual ~EFPSignalReceive();
 
   uint32_t signalVersion();
-  ElasticFrameMessages getStreamInformation(uint8_t *data, size_t size, std::unique_ptr<EFPSignalReceiveData>& parsedData);
+  ElasticFrameMessages getStreamInformationJSON(uint8_t *data, size_t size, std::unique_ptr<EFPSignalReceiveData>& parsedData);
+  ElasticFrameMessages getStreamInformationData(uint8_t *data, size_t size, std::unique_ptr<EFPSignalReceiveData>& parsedData);
 
   std::function<void(pFramePtr &rPacket)> receiveCallback = nullptr;
   std::function<void(std::unique_ptr<EFPSignalReceiveData>& data)> contentInformationCallback = nullptr;

@@ -7,13 +7,14 @@ EFPSignalReceive myEFPSignalReceive(5,2); //Needs to be destructed after the sen
 bool testFail;
 
 //If its ID 30 then set width and height
-void declareContent(EFPStreamContent* content) {
+bool declareContent(EFPStreamContent* content) {
   std::cout << "Declare content" << std::endl;
 
   if (content->mVariables.mGStreamID == 30 && content->mVariables.mGFrameContent == ElasticFrameContent::h264) {
     content->mVariables.mVWidth = 1920;
     content->mVariables.mVHeight = 1080;
   }
+  return true;
 }
 
 //Check if we got that info in the receiver.
@@ -44,6 +45,7 @@ int main() {
   std::cout << "EFPSignalReceive protocol version " << unsigned(myEFPSignalReceive.signalVersion()) << std::endl;
 
   myEFPSignalSend.mEmbedInterval100msSteps = 10;
+  myEFPSignalSend.mEmbeddBinary = true;
 
   ElasticFrameMessages status;
 
@@ -81,7 +83,7 @@ int main() {
     return EXIT_FAILURE;
   }
   sleep(1);
-  json myStreamInfo = myEFPSignalSend.generateAllStreamInfo();
+  json myStreamInfo = myEFPSignalSend.generateAllStreamInfoJSON();
   std::cout << myStreamInfo.dump() << std::endl;
   sleep(6);
 
@@ -114,7 +116,7 @@ int main() {
   }
 
   sleep(1);
-  myStreamInfo = myEFPSignalSend.generateAllStreamInfo();
+  myStreamInfo = myEFPSignalSend.generateAllStreamInfoJSON();
   std::cout << myStreamInfo.dump() << std::endl;
   if (testFail) {
     return EXIT_FAILURE;
