@@ -6,6 +6,45 @@
 #include "efpsignalinternal.h"
 
 
+//Global
+
+void EFPSignalExtraktValuesForKeyV1(EFPStreamContent *newContent, json &element, json *jError, bool *jsonOK) {
+
+  //General part
+  newContent->mVariables.mGDescription =
+      getContentForKey<std::string>("gdescription_str", element, *jError, *jsonOK);
+  newContent->mVariables.mGFrameContent =
+      getContentForKey<ElasticFrameContent>("gframecontent_u8", element, *jError, *jsonOK);
+  newContent->mVariables.mGStreamID = getContentForKey<uint8_t>("gstreamid_u8", element, *jError, *jsonOK);
+  newContent->mVariables.mGProtectionGroupID =
+      getContentForKey<uint8_t>("gprotectiongroup_u8", element, *jError, *jsonOK);
+  newContent->mVariables.mGSyncGroupID = getContentForKey<uint8_t>("gsyncgroup_u8", element, *jError, *jsonOK);
+  newContent->mVariables.mGPriority = getContentForKey<uint8_t>("gpriority_u8", element, *jError, *jsonOK);
+  newContent->mVariables.mGNotifyHere = getContentForKey<uint64_t>("gnotifyhere_u64", element, *jError, *jsonOK);
+
+  //Video part
+  newContent->mVariables.mVFrameRateNum = getContentForKey<uint32_t>("vratenum_u32", element, *jError, *jsonOK);
+  newContent->mVariables.mVFrameRateDen = getContentForKey<uint32_t>("vrateden_u32", element, *jError, *jsonOK);
+  newContent->mVariables.mVWidth = getContentForKey<uint32_t>("vwidth_u32", element, *jError, *jsonOK);
+  newContent->mVariables.mVHeight = getContentForKey<uint32_t>("vheight_u32", element, *jError, *jsonOK);
+  newContent->mVariables.mVBitsPerSec = getContentForKey<uint32_t>("vbps_u32", element, *jError, *jsonOK);
+
+  //Audio part
+  newContent->mVariables.mAFreqNum = getContentForKey<uint32_t>("afreqnum_u32", element, *jError, *jsonOK);
+  newContent->mVariables.mAFreqDen = getContentForKey<uint32_t>("afreqden_u32", element, *jError, *jsonOK);
+  newContent->mVariables.mANoChannels = getContentForKey<uint32_t>("anoch_u32", element, *jError, *jsonOK);
+  newContent->mVariables.mAChannelMapping = getContentForKey<uint32_t>("achmap_u32", element, *jError, *jsonOK);
+
+  //Text part
+  newContent->mVariables.mTTextType = getContentForKey<uint32_t>("ttype_u32", element, *jError, *jsonOK);
+  newContent->mVariables.mTLanguage = getContentForKey<std::string>("tlang_str", element, *jError, *jsonOK);
+
+  //auX part
+  newContent->mVariables.mXType = getContentForKey<uint32_t>("xtype_u32", element, *jError, *jsonOK);
+  newContent->mVariables.mXString = getContentForKey<std::string>("xstr_str", element, *jError, *jsonOK);
+  newContent->mVariables.mXValue = getContentForKey<uint32_t>("xval_u32", element, *jError, *jsonOK);
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 //
 //
@@ -164,7 +203,7 @@ EFPStreamContent EFPSignalSend::getContent(ElasticFrameContent dataContent, uint
   return 0;
 }
 
-json EFPSignalSend::generateStreamInfo(EFPStreamContent &content) {
+json EFPSignalSend::generateJSONStreamInfo(EFPStreamContent &content) {
   json jsonStream;
 
   //General part
@@ -212,7 +251,7 @@ json EFPSignalSend::generateAllStreamInfoJSON() {
     std::vector<EFPStreamContent> *streamContent = &mEFPStreamLists[x];
     if (streamContent->size()) {
       for (auto &rItems: *streamContent) {
-        json jsonStream = generateStreamInfo(rItems);
+        json jsonStream = generateJSONStreamInfo(rItems);
         tempStreams.push_back(jsonStream);
       }
     }
@@ -221,6 +260,17 @@ json EFPSignalSend::generateAllStreamInfoJSON() {
   jsonAllStreams["efpsignalversion_u32"] = EFP_SIGNAL_VERSION;
   jsonAllStreams["efpstreams_arr"] = tempStreams;
   return jsonAllStreams;
+}
+
+ElasticFrameMessages EFPSignalSend::generateStreamInfoFromJSON(EFPStreamContent *streamContent, json &content) {
+  bool jsonOK = true;
+  json jError;
+  EFPSignalExtraktValuesForKeyV1(streamContent,content,&jError,&jsonOK);
+  if (jsonOK) {
+    return ElasticFrameMessages::noError;
+  }
+  LOGGER(true, LOGG_ERROR, "ERROR parsing JSON EFPStreamContent")
+  return ElasticFrameMessages::dataNotJSON;
 }
 
 std::unique_ptr<std::vector<uint8_t>> EFPSignalSend::generateAllStreamInfoData() {
@@ -370,40 +420,7 @@ ElasticFrameMessages EFPSignalReceive::getStreamInformationJSON(uint8_t *data,
 
     for (auto &element : streams) {
       EFPStreamContent newContent(UINT32_MAX);
-      //General part
-      newContent.mVariables.mGDescription =
-          getContentForKey<std::string>("gdescription_str", element, jError, jsonOK);
-      newContent.mVariables.mGFrameContent =
-          getContentForKey<ElasticFrameContent>("gframecontent_u8", element, jError, jsonOK);
-      newContent.mVariables.mGStreamID = getContentForKey<uint8_t>("gstreamid_u8", element, jError, jsonOK);
-      newContent.mVariables.mGProtectionGroupID =
-          getContentForKey<uint8_t>("gprotectiongroup_u8", element, jError, jsonOK);
-      newContent.mVariables.mGSyncGroupID = getContentForKey<uint8_t>("gsyncgroup_u8", element, jError, jsonOK);
-      newContent.mVariables.mGPriority = getContentForKey<uint8_t>("gpriority_u8", element, jError, jsonOK);
-      newContent.mVariables.mGNotifyHere = getContentForKey<uint64_t>("gnotifyhere_u64", element, jError, jsonOK);
-
-      //Video part
-      newContent.mVariables.mVFrameRateNum = getContentForKey<uint32_t>("vratenum_u32", element, jError, jsonOK);
-      newContent.mVariables.mVFrameRateDen = getContentForKey<uint32_t>("vrateden_u32", element, jError, jsonOK);
-      newContent.mVariables.mVWidth = getContentForKey<uint32_t>("vwidth_u32", element, jError, jsonOK);
-      newContent.mVariables.mVHeight = getContentForKey<uint32_t>("vheight_u32", element, jError, jsonOK);
-      newContent.mVariables.mVBitsPerSec = getContentForKey<uint32_t>("vbps_u32", element, jError, jsonOK);
-
-      //Audio part
-      newContent.mVariables.mAFreqNum = getContentForKey<uint32_t>("afreqnum_u32", element, jError, jsonOK);
-      newContent.mVariables.mAFreqDen = getContentForKey<uint32_t>("afreqden_u32", element, jError, jsonOK);
-      newContent.mVariables.mANoChannels = getContentForKey<uint32_t>("anoch_u32", element, jError, jsonOK);
-      newContent.mVariables.mAChannelMapping = getContentForKey<uint32_t>("achmap_u32", element, jError, jsonOK);
-
-      //Text part
-      newContent.mVariables.mTTextType = getContentForKey<uint32_t>("ttype_u32", element, jError, jsonOK);
-      newContent.mVariables.mTLanguage = getContentForKey<std::string>("tlang_str", element, jError, jsonOK);
-
-      //auX part
-      newContent.mVariables.mXType = getContentForKey<uint32_t>("xtype_u32", element, jError, jsonOK);
-      newContent.mVariables.mXString = getContentForKey<std::string>("xstr_str", element, jError, jsonOK);
-      newContent.mVariables.mXValue = getContentForKey<uint32_t>("xval_u32", element, jError, jsonOK);
-
+      EFPSignalExtraktValuesForKeyV1(&newContent,element,&jError,&jsonOK);
       if (jsonOK) {
         parsedData->contentList.push_back(newContent);
       } else {

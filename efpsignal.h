@@ -142,7 +142,8 @@ public:
   ElasticFrameMessages registerContent(EFPStreamContent &content);
   ElasticFrameMessages deleteContent(ElasticFrameContent dataContent, uint8_t streamID);
   EFPStreamContent getContent(ElasticFrameContent dataContent, uint8_t streamID);
-  json generateStreamInfo(EFPStreamContent &content);
+  json generateJSONStreamInfo(EFPStreamContent &content);
+  ElasticFrameMessages generateStreamInfoFromJSON(EFPStreamContent *streamContent, json &content);
   json generateAllStreamInfoJSON();
   std::unique_ptr<std::vector<uint8_t>> generateAllStreamInfoData();
 
