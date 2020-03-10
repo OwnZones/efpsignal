@@ -12,8 +12,6 @@
 #define LOGG_FATAL (unsigned)8
 #define LOGG_MASK LOGG_NOTIFY | LOGG_WARN | LOGG_ERROR | LOGG_FATAL //What to logg?
 
-#define DEBUG
-
 #ifdef DEBUG
 #define LOGGER(l, g, f) \
 { \
