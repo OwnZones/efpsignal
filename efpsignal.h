@@ -60,37 +60,40 @@ public:
     mCurrentTimeToLivems = mTimeToLivems;
   }
 
-  //General part
-  std::string mGDescription ="";
-  ElasticFrameContent mGFrameContent = ElasticFrameContent::unknown;
-  uint8_t mGStreamID = 0;
-  uint8_t mGProtectionGroupID = 0;
-  uint8_t mGSyncGroupID = 0;
-  uint8_t mGPriority = 0;
-  uint64_t mGNotifyHere = 0;
+  struct Variables {
+    uint32_t binaryVersion = EFP_SIGNAL_VERSION;
+    //General part
+    std::string mGDescription = "";
+    ElasticFrameContent mGFrameContent = ElasticFrameContent::unknown;
+    uint8_t mGStreamID = 0;
+    uint8_t mGProtectionGroupID = 0;
+    uint8_t mGSyncGroupID = 0;
+    uint8_t mGPriority = 0;
+    uint64_t mGNotifyHere = 0;
 
-  //Video part
-  uint32_t mVFrameRateNum = 0;
-  uint32_t mVFrameRateDen = 0;
-  uint32_t mVWidth = 0;
-  uint32_t mVHeight = 0;
-  uint32_t mVBitsPerSec = 0;
+    //Video part
+    uint32_t mVFrameRateNum = 0;
+    uint32_t mVFrameRateDen = 0;
+    uint32_t mVWidth = 0;
+    uint32_t mVHeight = 0;
+    uint32_t mVBitsPerSec = 0;
 
-  //Audio part
-  uint32_t mAFreqNum = 0;
-  uint32_t mAFreqDen = 0;
-  uint32_t mANoChannels = 0;
-  uint32_t mAChannelMapping = 0;
-  uint32_t mABitsPerSec = 0;
+    //Audio part
+    uint32_t mAFreqNum = 0;
+    uint32_t mAFreqDen = 0;
+    uint32_t mANoChannels = 0;
+    uint32_t mAChannelMapping = 0;
+    uint32_t mABitsPerSec = 0;
 
-  //Text part
-  uint32_t mTTextType = 0;
-  std::string mTLanguage = "";
+    //Text part
+    uint32_t mTTextType = 0;
+    std::string mTLanguage = "";
 
-  //auX part
-  uint32_t mXType = 0;
-  std::string mXString = "";
-  uint32_t mXValue = 0;
+    //auX part
+    uint32_t mXType = 0;
+    std::string mXString = "";
+    uint32_t mXValue = 0;
+  } mVariables;
 
 private:
   int32_t mTimeToLivems;

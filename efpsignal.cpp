@@ -33,8 +33,8 @@ ElasticFrameMessages EFPSignalSend::signalFilter(ElasticFrameContent dataContent
   if (!mIsKnown[streamID][dataContent]) {
     if (mAutoRegister) {
       EFPStreamContent newContent(mGarbageCollectms);
-      newContent.mGStreamID = streamID;
-      newContent.mGFrameContent = dataContent;
+      newContent.mVariables.mGStreamID = streamID;
+      newContent.mVariables.mGFrameContent = dataContent;
       if (declareContentCallback) {
         declareContentCallback(&newContent);
       }
@@ -91,12 +91,12 @@ EFPSignalSend::packAndSendFromPtr(const uint8_t *pPacket,
 }
 
 ElasticFrameMessages EFPSignalSend::registerContent(EFPStreamContent &content) {
-  uint8_t streamID = content.mGStreamID;
+  uint8_t streamID = content.mVariables.mGStreamID;
   if (streamID == 0) {
     return ElasticFrameMessages::reservedStreamValue;
   }
 
-  ElasticFrameContent dataContent = content.mGFrameContent;
+  ElasticFrameContent dataContent = content.mVariables.mGFrameContent;
   if (mIsKnown[streamID][dataContent]) {
     return ElasticFrameMessages::contentAlreadyListed;
   }
@@ -121,7 +121,7 @@ ElasticFrameMessages EFPSignalSend::deleteContent(ElasticFrameContent dataConten
   int lItemIndex = 0;
   std::vector<EFPStreamContent> *streamContent = &mEFPStreamLists[streamID];
   for (auto &rItems: *streamContent) {
-    if (rItems.mGFrameContent == dataContent) {
+    if (rItems.mVariables.mGFrameContent == dataContent) {
       streamContent->erase(streamContent->begin() + lItemIndex);
       LOGGER(true, LOGG_NOTIFY, "Deleted entry")
       mIsKnown[streamID][dataContent] = false;
@@ -146,7 +146,7 @@ EFPStreamContent EFPSignalSend::getContent(ElasticFrameContent dataContent, uint
   std::lock_guard<std::mutex> lock(mStreamListMtx);
   std::vector<EFPStreamContent> *streamContent = &mEFPStreamLists[streamID];
   for (auto &rItems: *streamContent) {
-    if (rItems.mGFrameContent == dataContent) {
+    if (rItems.mVariables.mGFrameContent == dataContent) {
       return rItems;
     }
   }
@@ -157,36 +157,36 @@ json EFPSignalSend::generateStreamInfo(EFPStreamContent &content) {
   json jsonStream;
 
   //General part
-  jsonStream["gdescription_str"] = content.mGDescription;
-  jsonStream["gframecontent_u8"] = content.mGFrameContent;
-  jsonStream["gstreamid_u8"] = content.mGStreamID;
-  jsonStream["gprotectiongroup_u8"] = content.mGProtectionGroupID;
-  jsonStream["gsyncgroup_u8"] = content.mGSyncGroupID;
-  jsonStream["gpriority_u8"] = content.mGPriority;
-  jsonStream["gnotifyhere_u64"] = content.mGNotifyHere;
+  jsonStream["gdescription_str"] = content.mVariables.mGDescription;
+  jsonStream["gframecontent_u8"] = content.mVariables.mGFrameContent;
+  jsonStream["gstreamid_u8"] = content.mVariables.mGStreamID;
+  jsonStream["gprotectiongroup_u8"] = content.mVariables.mGProtectionGroupID;
+  jsonStream["gsyncgroup_u8"] = content.mVariables.mGSyncGroupID;
+  jsonStream["gpriority_u8"] = content.mVariables.mGPriority;
+  jsonStream["gnotifyhere_u64"] = content.mVariables.mGNotifyHere;
 
   //Video part
-  jsonStream["vratenum_u32"] = content.mVFrameRateNum;
-  jsonStream["vrateden_u32"] = content.mVFrameRateDen;
-  jsonStream["vwidth_u32"] = content.mVWidth;
-  jsonStream["vheight_u32"] = content.mVHeight;
-  jsonStream["vbps_u32"] = content.mVBitsPerSec;
+  jsonStream["vratenum_u32"] = content.mVariables.mVFrameRateNum;
+  jsonStream["vrateden_u32"] = content.mVariables.mVFrameRateDen;
+  jsonStream["vwidth_u32"] = content.mVariables.mVWidth;
+  jsonStream["vheight_u32"] = content.mVariables.mVHeight;
+  jsonStream["vbps_u32"] = content.mVariables.mVBitsPerSec;
 
   //Audio part
-  jsonStream["afreqnum_u32"] = content.mAFreqNum;
-  jsonStream["afreqden_u32"] = content.mAFreqDen;
-  jsonStream["anoch_u32"] = content.mANoChannels;
-  jsonStream["achmap_u32"] = content.mAChannelMapping;
-  jsonStream["abps_u32"] = content.mABitsPerSec;
+  jsonStream["afreqnum_u32"] = content.mVariables.mAFreqNum;
+  jsonStream["afreqden_u32"] = content.mVariables.mAFreqDen;
+  jsonStream["anoch_u32"] = content.mVariables.mANoChannels;
+  jsonStream["achmap_u32"] = content.mVariables.mAChannelMapping;
+  jsonStream["abps_u32"] = content.mVariables.mABitsPerSec;
 
   //Text part
-  jsonStream["ttype_u32"] = content.mTTextType;
-  jsonStream["tlang_str"] = content.mTLanguage;
+  jsonStream["ttype_u32"] = content.mVariables.mTTextType;
+  jsonStream["tlang_str"] = content.mVariables.mTLanguage;
 
   //auX part
-  jsonStream["xtype_u32"] = content.mXType;
-  jsonStream["xstr_str"] = content.mXString;
-  jsonStream["xval_u32"] = content.mXValue;
+  jsonStream["xtype_u32"] = content.mVariables.mXType;
+  jsonStream["xstr_str"] = content.mVariables.mXString;
+  jsonStream["xval_u32"] = content.mVariables.mXValue;
   return jsonStream;
 }
 
@@ -330,35 +330,35 @@ ElasticFrameMessages EFPSignalReceive::getStreamInformation(uint8_t *data, size_
     for (auto &element : streams) {
       EFPStreamContent newContent(UINT32_MAX);
       //General part
-      newContent.mGDescription = getContentForKey<std::string>("gdescription_str", element, jError, jsonOK);
-      newContent.mGFrameContent = getContentForKey<ElasticFrameContent>("gframecontent_u8", element, jError, jsonOK);
-      newContent.mGStreamID = getContentForKey<uint8_t>("gstreamid_u8", element, jError, jsonOK);
-      newContent.mGProtectionGroupID = getContentForKey<uint8_t>("gprotectiongroup_u8", element, jError, jsonOK);
-      newContent.mGSyncGroupID = getContentForKey<uint8_t>("gsyncgroup_u8", element, jError, jsonOK);
-      newContent.mGPriority = getContentForKey<uint8_t>("gpriority_u8", element, jError, jsonOK);
-      newContent.mGNotifyHere = getContentForKey<uint64_t>("gnotifyhere_u64", element, jError, jsonOK);
+      newContent.mVariables.mGDescription = getContentForKey<std::string>("gdescription_str", element, jError, jsonOK);
+      newContent.mVariables.mGFrameContent = getContentForKey<ElasticFrameContent>("gframecontent_u8", element, jError, jsonOK);
+      newContent.mVariables.mGStreamID = getContentForKey<uint8_t>("gstreamid_u8", element, jError, jsonOK);
+      newContent.mVariables.mGProtectionGroupID = getContentForKey<uint8_t>("gprotectiongroup_u8", element, jError, jsonOK);
+      newContent.mVariables.mGSyncGroupID = getContentForKey<uint8_t>("gsyncgroup_u8", element, jError, jsonOK);
+      newContent.mVariables.mGPriority = getContentForKey<uint8_t>("gpriority_u8", element, jError, jsonOK);
+      newContent.mVariables.mGNotifyHere = getContentForKey<uint64_t>("gnotifyhere_u64", element, jError, jsonOK);
 
       //Video part
-      newContent.mVFrameRateNum = getContentForKey<uint32_t>("vratenum_u32", element, jError, jsonOK);
-      newContent.mVFrameRateDen = getContentForKey<uint32_t>("vrateden_u32", element, jError, jsonOK);
-      newContent.mVWidth = getContentForKey<uint32_t>("vwidth_u32", element, jError, jsonOK);
-      newContent.mVHeight = getContentForKey<uint32_t>("vheight_u32", element, jError, jsonOK);
-      newContent.mVBitsPerSec = getContentForKey<uint32_t>("vbps_u32", element, jError, jsonOK);
+      newContent.mVariables.mVFrameRateNum = getContentForKey<uint32_t>("vratenum_u32", element, jError, jsonOK);
+      newContent.mVariables.mVFrameRateDen = getContentForKey<uint32_t>("vrateden_u32", element, jError, jsonOK);
+      newContent.mVariables.mVWidth = getContentForKey<uint32_t>("vwidth_u32", element, jError, jsonOK);
+      newContent.mVariables.mVHeight = getContentForKey<uint32_t>("vheight_u32", element, jError, jsonOK);
+      newContent.mVariables.mVBitsPerSec = getContentForKey<uint32_t>("vbps_u32", element, jError, jsonOK);
 
       //Audio part
-      newContent.mAFreqNum = getContentForKey<uint32_t>("afreqnum_u32", element, jError, jsonOK);
-      newContent.mAFreqDen = getContentForKey<uint32_t>("afreqden_u32", element, jError, jsonOK);
-      newContent.mANoChannels = getContentForKey<uint32_t>("anoch_u32", element, jError, jsonOK);
-      newContent.mAChannelMapping = getContentForKey<uint32_t>("achmap_u32", element, jError, jsonOK);
+      newContent.mVariables.mAFreqNum = getContentForKey<uint32_t>("afreqnum_u32", element, jError, jsonOK);
+      newContent.mVariables.mAFreqDen = getContentForKey<uint32_t>("afreqden_u32", element, jError, jsonOK);
+      newContent.mVariables.mANoChannels = getContentForKey<uint32_t>("anoch_u32", element, jError, jsonOK);
+      newContent.mVariables.mAChannelMapping = getContentForKey<uint32_t>("achmap_u32", element, jError, jsonOK);
 
       //Text part
-      newContent.mTTextType = getContentForKey<uint32_t>("ttype_u32", element, jError, jsonOK);
-      newContent.mTLanguage = getContentForKey<std::string>("tlang_str", element, jError, jsonOK);
+      newContent.mVariables.mTTextType = getContentForKey<uint32_t>("ttype_u32", element, jError, jsonOK);
+      newContent.mVariables.mTLanguage = getContentForKey<std::string>("tlang_str", element, jError, jsonOK);
 
       //auX part
-      newContent.mXType = getContentForKey<uint32_t>("xtype_u32", element, jError, jsonOK);
-      newContent.mXString = getContentForKey<std::string>("xstr_str", element, jError, jsonOK);
-      newContent.mXValue = getContentForKey<uint32_t>("xval_u32", element, jError, jsonOK);
+      newContent.mVariables.mXType = getContentForKey<uint32_t>("xtype_u32", element, jError, jsonOK);
+      newContent.mVariables.mXString = getContentForKey<std::string>("xstr_str", element, jError, jsonOK);
+      newContent.mVariables.mXValue = getContentForKey<uint32_t>("xval_u32", element, jError, jsonOK);
 
       if (jsonOK) {
         parsedData->contentList.push_back(newContent);
