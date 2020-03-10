@@ -193,7 +193,9 @@ public:
   };
 
   ///Constructor
-  explicit EFPSignalReceive();
+  explicit EFPSignalReceive(uint32_t bucketTimeoutMaster, uint32_t holTimeoutMaster ) : ElasticFrameProtocolReceiver(bucketTimeoutMaster,holTimeoutMaster){
+    ElasticFrameProtocolReceiver::receiveCallback = std::bind(&EFPSignalReceive::gotData, this, std::placeholders::_1);
+  }
 
   ///Destructor
   virtual ~EFPSignalReceive();

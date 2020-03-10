@@ -29,6 +29,7 @@ EFPSignalSend::~EFPSignalSend() {
   LOGGER(true, LOGG_NOTIFY, "EFPSignal destruct")
 }
 
+//Fixme reset timer!!! Else the item will autotimeout
 ElasticFrameMessages EFPSignalSend::signalFilter(ElasticFrameContent dataContent, uint8_t streamID) {
   if (!mIsKnown[streamID][dataContent]) {
     if (mAutoRegister) {
@@ -290,11 +291,6 @@ void EFPSignalSend::startSignalWorker() {
 //
 //
 //---------------------------------------------------------------------------------------------------------------------
-
-EFPSignalReceive::EFPSignalReceive() {
-  ElasticFrameProtocolReceiver::receiveCallback = std::bind(&EFPSignalReceive::gotData, this, std::placeholders::_1);
-  LOGGER(true, LOGG_NOTIFY, "EFPSignalReceive construct")
-};
 
 EFPSignalReceive::~EFPSignalReceive() {
   LOGGER(true, LOGG_NOTIFY, "EFPSignalReceive destruct")

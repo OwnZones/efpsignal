@@ -3,7 +3,7 @@
 
 #define MTU 1456 //SRT-max
 
-EFPSignalReceive myEFPSignalReceive; //Needs to be destructed after the sender to avoid races in the tests.
+EFPSignalReceive myEFPSignalReceive(5,2); //Needs to be destructed after the sender to avoid races in the tests.
 bool testFail;
 
 //If its ID 30 then set width and height
@@ -38,7 +38,9 @@ void gotData(ElasticFrameProtocolReceiver::pFramePtr &packet) {
 
 int main() {
   testFail = false;
+
   EFPSignalSend myEFPSignalSend(MTU, 5000);
+
   std::cout << "EFPSignalSend protocol version " << unsigned(myEFPSignalSend.signalVersion()) << std::endl;
   std::cout << "EFPSignalReceive protocol version " << unsigned(myEFPSignalReceive.signalVersion()) << std::endl;
 
