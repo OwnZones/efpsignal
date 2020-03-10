@@ -45,7 +45,7 @@ int main() {
   std::cout << "EFPSignalReceive protocol version " << unsigned(myEFPSignalReceive.signalVersion()) << std::endl;
 
   myEFPSignalSend.mEmbedInterval100msSteps = 10;
-  myEFPSignalSend.mEmbeddBinary = true;
+  myEFPSignalSend.mEmbeddBinary = false;
 
   ElasticFrameMessages status;
 
@@ -82,10 +82,12 @@ int main() {
   if (status != ElasticFrameMessages::noError) {
     return EXIT_FAILURE;
   }
-  sleep(1);
+  std::this_thread::sleep_for(std::chrono::seconds(1));
   json myStreamInfo = myEFPSignalSend.generateAllStreamInfoJSON();
   std::cout << myStreamInfo.dump() << std::endl;
-  sleep(6);
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  myEFPSignalSend.mEmbeddBinary = true;
+  std::this_thread::sleep_for(std::chrono::seconds(5));
 
   std::cout << "Add fake" << std::endl;
   EFPStreamContent fakeContent2(1500);
@@ -115,7 +117,8 @@ int main() {
     return EXIT_FAILURE;
   }
 
-  sleep(1);
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+
   myStreamInfo = myEFPSignalSend.generateAllStreamInfoJSON();
   std::cout << myStreamInfo.dump() << std::endl;
   if (testFail) {
