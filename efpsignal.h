@@ -63,12 +63,14 @@ public:
     mCurrentTimeToLivems = mTimeToLivems;
   }
 
+
   bool mWhiteListed = false;
 
   struct Variables {
     //General part
     std::string mGDescription = "";
     ElasticFrameContent mGFrameContent = ElasticFrameContent::unknown;
+    uint8_t mGContentCycle = 0;
     uint8_t mGStreamID = 0;
     uint8_t mGProtectionGroupID = 0;
     uint8_t mGSyncGroupID = 0;
@@ -153,6 +155,8 @@ public:
   uint32_t signalVersion();
 
   std::function<bool(EFPStreamContent* content)> declareContentCallback = nullptr;
+  std::function<void(std::unique_ptr<std::vector<uint8_t>> &rStreamContentData, json &rJsonContent)> declarationCallback = nullptr;
+
 
   ///Delete copy and move constructors and assign operators
   EFPSignalSend(EFPSignalSend const &) = delete;              // Copy construct
@@ -162,10 +166,13 @@ public:
 
   //Setings
   bool mAutoRegister = true;
+
   bool mEmbedInStream = true;
-  bool mEmbedOnlyChanges = false;
-  bool mEmbedBinary = false;
+  bool mBinaryMode = false;
+
   uint32_t mEmbedInterval100msSteps = 1;
+  bool mTriggerChanges = false;
+  bool mEmbedDeltas = false;
 
 protected:
   int32_t mGarbageCollectms = 0;
