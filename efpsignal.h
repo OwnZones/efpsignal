@@ -1,6 +1,9 @@
+// EFPSignal
 //
-// Created by Anders Cedronius on 2020-03-06.
+// UnitX Edgeware AB 2020
 //
+
+// Reflection regarding
 
 
 
@@ -60,6 +63,8 @@ public:
     mCurrentTimeToLivems = mTimeToLivems;
   }
 
+  bool mWhiteListed = false;
+
   struct Variables {
     //General part
     std::string mGDescription = "";
@@ -78,15 +83,14 @@ public:
     uint32_t mVBitsPerSec = 0;
 
     //Audio part
-    uint32_t mAFreqNum = 0;
-    uint32_t mAFreqDen = 0;
+    uint32_t mAFreq = 0;
     uint32_t mANoChannels = 0;
     uint32_t mAChannelMapping = 0;
     uint32_t mABitsPerSec = 0;
 
     //Text part
-    uint32_t mTTextType = 0;
     std::string mTLanguage = "";
+    std::string mTextConfig = "";
 
     //auX part
     uint32_t mXType = 0;
@@ -121,7 +125,6 @@ public:
 
   ///Constructor
   explicit EFPSignalSend(uint16_t setMTU, uint32_t garbageCollectms ) : ElasticFrameProtocolSender(setMTU){
-    mThreadRunSignal = true;
     mEFPStreamLists.reserve(256);
     mGarbageCollectms = garbageCollectms;
     startSignalWorker();
@@ -131,22 +134,22 @@ public:
   virtual ~EFPSignalSend();
 
   ElasticFrameMessages
-  packAndSend(const std::vector<uint8_t> &rPacket, ElasticFrameContent dataContent, uint64_t pts, uint64_t dts,
+  packAndSend(const std::vector<uint8_t> &rPacket, ElasticFrameContent frameContent, uint64_t pts, uint64_t dts,
               uint32_t code,
               uint8_t streamID, uint8_t flags);
 
   ElasticFrameMessages
-  packAndSendFromPtr(const uint8_t* pPacket, size_t packetSize, ElasticFrameContent dataContent, uint64_t pts, uint64_t dts,
+  packAndSendFromPtr(const uint8_t* pPacket, size_t packetSize, ElasticFrameContent frameContent, uint64_t pts, uint64_t dts,
                      uint32_t code, uint8_t streamID, uint8_t flags);
 
-  ElasticFrameMessages registerContent(EFPStreamContent &content);
-  ElasticFrameMessages deleteContent(ElasticFrameContent dataContent, uint8_t streamID);
-  EFPStreamContent getContent(ElasticFrameContent dataContent, uint8_t streamID);
-  json generateJSONStreamInfo(EFPStreamContent &content);
-  ElasticFrameMessages generateStreamInfoFromJSON(EFPStreamContent *streamContent, json &content);
-  json generateAllStreamInfoJSON();
-  std::unique_ptr<std::vector<uint8_t>> generateAllStreamInfoData();
 
+  ElasticFrameMessages registerContent(EFPStreamContent &rStreamContent);
+  ElasticFrameMessages deleteContent(ElasticFrameContent frameContent, uint8_t streamID);
+  ElasticFrameMessages getContent(EFPStreamContent &rStreamContent, ElasticFrameContent frameContent, uint8_t streamID);
+  ElasticFrameMessages generateJSONStreamInfo(json &rJsonContent, EFPStreamContent &rStreamContent);
+  ElasticFrameMessages generateStreamInfoFromJSON(EFPStreamContent &rStreamContent, json &rJsonContent);
+  ElasticFrameMessages generateAllStreamInfoJSON(json &rJsonContent);
+  ElasticFrameMessages generateAllStreamInfoData(std::unique_ptr<std::vector<uint8_t>> &rStreamContentData);
   uint32_t signalVersion();
 
   std::function<bool(EFPStreamContent* content)> declareContentCallback = nullptr;
@@ -158,7 +161,6 @@ public:
   EFPSignalSend &operator=(EFPSignalSend &&) = delete;        // Move assign
 
   //Setings
-  bool mDropUnknown = false;
   bool mAutoRegister = true;
   bool mEmbedInStream = true;
   bool mEmbedOnlyChanges = false;
@@ -198,9 +200,9 @@ public:
 
   class EFPSignalReceiveData {
   public:
-    uint32_t signalVersion = 0;
-    uint32_t streamVersion = 0;
-    std::vector<EFPStreamContent> contentList;
+    uint32_t mSignalVersion = 0;
+    uint32_t mStreamVersion = 0;
+    std::vector<EFPStreamContent> mContentList;
   };
 
   ///Constructor
@@ -211,9 +213,9 @@ public:
   ///Destructor
   virtual ~EFPSignalReceive();
 
-  uint32_t signalVersion();
   ElasticFrameMessages getStreamInformationJSON(uint8_t *data, size_t size, std::unique_ptr<EFPSignalReceiveData>& parsedData);
   ElasticFrameMessages getStreamInformationData(uint8_t *data, size_t size, std::unique_ptr<EFPSignalReceiveData>& parsedData);
+  uint32_t signalVersion();
 
   std::function<void(pFramePtr &rPacket)> receiveCallback = nullptr;
   std::function<void(std::unique_ptr<EFPSignalReceiveData>& data)> contentInformationCallback = nullptr;

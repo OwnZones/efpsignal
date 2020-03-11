@@ -5,43 +5,40 @@
 #include "efpsignal.h"
 #include "efpsignalinternal.h"
 
-
 //Global
-void EFPSignalExtraktValuesForKeyV1(EFPStreamContent *newContent, json &element, json *jError, bool *jsonOK) {
-
+void EFPSignalExtraktValuesForKeyV1(EFPStreamContent &newContent, json &element, json &jError, bool &jsonOK) {
   //General part
-  newContent->mVariables.mGDescription =
-      getContentForKey<std::string>("gdescription_str", element, *jError, *jsonOK);
-  newContent->mVariables.mGFrameContent =
-      getContentForKey<ElasticFrameContent>("gframecontent_u8", element, *jError, *jsonOK);
-  newContent->mVariables.mGStreamID = getContentForKey<uint8_t>("gstreamid_u8", element, *jError, *jsonOK);
-  newContent->mVariables.mGProtectionGroupID =
-      getContentForKey<uint8_t>("gprotectiongroup_u8", element, *jError, *jsonOK);
-  newContent->mVariables.mGSyncGroupID = getContentForKey<uint8_t>("gsyncgroup_u8", element, *jError, *jsonOK);
-  newContent->mVariables.mGPriority = getContentForKey<uint8_t>("gpriority_u8", element, *jError, *jsonOK);
-  newContent->mVariables.mGNotifyHere = getContentForKey<uint64_t>("gnotifyhere_u64", element, *jError, *jsonOK);
+  newContent.mVariables.mGDescription =
+      getContentForKey<std::string>("gdescription_str", element, jError, jsonOK);
+  newContent.mVariables.mGFrameContent =
+      getContentForKey<ElasticFrameContent>("gframecontent_u8", element, jError, jsonOK);
+  newContent.mVariables.mGStreamID = getContentForKey<uint8_t>("gstreamid_u8", element, jError, jsonOK);
+  newContent.mVariables.mGProtectionGroupID =
+      getContentForKey<uint8_t>("gprotectiongroup_u8", element, jError, jsonOK);
+  newContent.mVariables.mGSyncGroupID = getContentForKey<uint8_t>("gsyncgroup_u8", element, jError, jsonOK);
+  newContent.mVariables.mGPriority = getContentForKey<uint8_t>("gpriority_u8", element, jError, jsonOK);
+  newContent.mVariables.mGNotifyHere = getContentForKey<uint64_t>("gnotifyhere_u64", element, jError, jsonOK);
 
   //Video part
-  newContent->mVariables.mVFrameRateNum = getContentForKey<uint32_t>("vratenum_u32", element, *jError, *jsonOK);
-  newContent->mVariables.mVFrameRateDen = getContentForKey<uint32_t>("vrateden_u32", element, *jError, *jsonOK);
-  newContent->mVariables.mVWidth = getContentForKey<uint32_t>("vwidth_u32", element, *jError, *jsonOK);
-  newContent->mVariables.mVHeight = getContentForKey<uint32_t>("vheight_u32", element, *jError, *jsonOK);
-  newContent->mVariables.mVBitsPerSec = getContentForKey<uint32_t>("vbps_u32", element, *jError, *jsonOK);
+  newContent.mVariables.mVFrameRateNum = getContentForKey<uint32_t>("vratenum_u32", element, jError, jsonOK);
+  newContent.mVariables.mVFrameRateDen = getContentForKey<uint32_t>("vrateden_u32", element, jError, jsonOK);
+  newContent.mVariables.mVWidth = getContentForKey<uint32_t>("vwidth_u32", element, jError, jsonOK);
+  newContent.mVariables.mVHeight = getContentForKey<uint32_t>("vheight_u32", element, jError, jsonOK);
+  newContent.mVariables.mVBitsPerSec = getContentForKey<uint32_t>("vbps_u32", element, jError, jsonOK);
 
   //Audio part
-  newContent->mVariables.mAFreqNum = getContentForKey<uint32_t>("afreqnum_u32", element, *jError, *jsonOK);
-  newContent->mVariables.mAFreqDen = getContentForKey<uint32_t>("afreqden_u32", element, *jError, *jsonOK);
-  newContent->mVariables.mANoChannels = getContentForKey<uint32_t>("anoch_u32", element, *jError, *jsonOK);
-  newContent->mVariables.mAChannelMapping = getContentForKey<uint32_t>("achmap_u32", element, *jError, *jsonOK);
+  newContent.mVariables.mAFreq = getContentForKey<uint32_t>("afreq_u32", element, jError, jsonOK);
+  newContent.mVariables.mANoChannels = getContentForKey<uint32_t>("anoch_u32", element, jError, jsonOK);
+  newContent.mVariables.mAChannelMapping = getContentForKey<uint32_t>("achmap_u32", element, jError, jsonOK);
 
   //Text part
-  newContent->mVariables.mTTextType = getContentForKey<uint32_t>("ttype_u32", element, *jError, *jsonOK);
-  newContent->mVariables.mTLanguage = getContentForKey<std::string>("tlang_str", element, *jError, *jsonOK);
+  newContent.mVariables.mTLanguage = getContentForKey<std::string>("tlang_str", element, jError, jsonOK);
+  newContent.mVariables.mTextConfig = getContentForKey<std::string>("ttextconfig_str", element, jError, jsonOK);
 
   //auX part
-  newContent->mVariables.mXType = getContentForKey<uint32_t>("xtype_u32", element, *jError, *jsonOK);
-  newContent->mVariables.mXString = getContentForKey<std::string>("xstr_str", element, *jError, *jsonOK);
-  newContent->mVariables.mXValue = getContentForKey<uint32_t>("xval_u32", element, *jError, *jsonOK);
+  newContent.mVariables.mXType = getContentForKey<uint32_t>("xtype_u32", element, jError, jsonOK);
+  newContent.mVariables.mXString = getContentForKey<std::string>("xstr_str", element, jError, jsonOK);
+  newContent.mVariables.mXValue = getContentForKey<uint32_t>("xval_u32", element, jError, jsonOK);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -68,32 +65,33 @@ EFPSignalSend::~EFPSignalSend() {
 }
 
 ElasticFrameMessages EFPSignalSend::signalFilter(ElasticFrameContent dataContent, uint8_t streamID) {
-  if (!mIsKnown[streamID][dataContent]) {
-    if (mAutoRegister) {
-      EFPStreamContent newContent(mGarbageCollectms);
-      newContent.mVariables.mGStreamID = streamID;
-      newContent.mVariables.mGFrameContent = dataContent;
-      if (declareContentCallback) {
-        if (!declareContentCallback(&newContent)){
+  if (mIsKnown[streamID][dataContent]) {
+    std::lock_guard<std::mutex> lock(mStreamListMtx);
+    std::vector<EFPStreamContent> *lStreamContent = &mEFPStreamLists[streamID];
+    for (auto &rItems: *lStreamContent) {
+      if (rItems.mVariables.mGFrameContent == dataContent) {
+        rItems.resetTTL();
+        if (!rItems.mWhiteListed) {
           return ElasticFrameMessages::efpSignalDropped;
         }
+        break;
+      }
+    }
+  } else {
+    if (mAutoRegister) {
+      EFPStreamContent lNewContent(mGarbageCollectms);
+      lNewContent.mVariables.mGStreamID = streamID;
+      lNewContent.mVariables.mGFrameContent = dataContent;
+      if (declareContentCallback) {
+        lNewContent.mWhiteListed = declareContentCallback(&lNewContent);
       }
       std::lock_guard<std::mutex> lock(mStreamListMtx);
-      mEFPStreamLists[streamID].push_back(newContent);
+      mEFPStreamLists[streamID].push_back(lNewContent);
       mIsKnown[streamID][dataContent] = true;
       LOGGER(true, LOGG_NOTIFY, "Added entry")
       mEFPStreamListVersion++;
-    }
-    if (mDropUnknown) {
-      return ElasticFrameMessages::efpSignalDropped;
-    }
-  } else {
-    std::lock_guard<std::mutex> lock(mStreamListMtx);
-    std::vector<EFPStreamContent> *streamContent = &mEFPStreamLists[streamID];
-    for (auto &rItems: *streamContent) {
-      if (rItems.mVariables.mGFrameContent == dataContent) {
-        rItems.resetTTL();
-        break;
+      if (!lNewContent.mWhiteListed) {
+        return ElasticFrameMessages::efpSignalDropped;
       }
     }
   }
@@ -102,36 +100,36 @@ ElasticFrameMessages EFPSignalSend::signalFilter(ElasticFrameContent dataContent
 
 ElasticFrameMessages
 EFPSignalSend::packAndSend(const std::vector<uint8_t> &rPacket,
-                           ElasticFrameContent dataContent,
+                           ElasticFrameContent frameContent,
                            uint64_t pts,
                            uint64_t dts,
                            uint32_t code,
                            uint8_t streamID,
                            uint8_t flags) {
 
-  ElasticFrameMessages signalMsg = signalFilter(dataContent, streamID);
-  if (signalMsg != ElasticFrameMessages::noError) {
-    return signalMsg;
+  ElasticFrameMessages lSignalMsg = signalFilter(frameContent, streamID);
+  if (lSignalMsg != ElasticFrameMessages::noError) {
+    return lSignalMsg;
   }
-  return ElasticFrameProtocolSender::packAndSend(rPacket, dataContent, pts, dts, code, streamID, flags);
+  return ElasticFrameProtocolSender::packAndSend(rPacket, frameContent, pts, dts, code, streamID, flags);
 }
 
 ElasticFrameMessages
 EFPSignalSend::packAndSendFromPtr(const uint8_t *pPacket,
                                   size_t packetSize,
-                                  ElasticFrameContent dataContent,
+                                  ElasticFrameContent frameContent,
                                   uint64_t pts,
                                   uint64_t dts,
                                   uint32_t code,
                                   uint8_t streamID,
                                   uint8_t flags) {
-  ElasticFrameMessages signalMsg = signalFilter(dataContent, streamID);
-  if (signalMsg != ElasticFrameMessages::noError) {
-    return signalMsg;
+  ElasticFrameMessages lSignalMsg = signalFilter(frameContent, streamID);
+  if (lSignalMsg != ElasticFrameMessages::noError) {
+    return lSignalMsg;
   }
   return ElasticFrameProtocolSender::packAndSendFromPtr(pPacket,
                                                         packetSize,
-                                                        dataContent,
+                                                        frameContent,
                                                         pts,
                                                         dts,
                                                         code,
@@ -139,188 +137,199 @@ EFPSignalSend::packAndSendFromPtr(const uint8_t *pPacket,
                                                         flags);
 }
 
-ElasticFrameMessages EFPSignalSend::registerContent(EFPStreamContent &content) {
-  uint8_t streamID = content.mVariables.mGStreamID;
-  if (streamID == 0) {
+ElasticFrameMessages EFPSignalSend::registerContent(EFPStreamContent &rStreamContent) {
+  uint8_t lStreamID = rStreamContent.mVariables.mGStreamID;
+  if (lStreamID == 0) {
     return ElasticFrameMessages::reservedStreamValue;
   }
 
-  ElasticFrameContent dataContent = content.mVariables.mGFrameContent;
-  if (mIsKnown[streamID][dataContent]) {
+  ElasticFrameContent lDataContent = rStreamContent.mVariables.mGFrameContent;
+  if (mIsKnown[lStreamID][lDataContent]) {
     return ElasticFrameMessages::contentAlreadyListed;
   }
 
   std::lock_guard<std::mutex> lock(mStreamListMtx);
-  mEFPStreamLists[streamID].push_back(content);
-  mIsKnown[streamID][dataContent] = true;
+  mEFPStreamLists[lStreamID].push_back(rStreamContent);
+  mIsKnown[lStreamID][lDataContent] = true;
   mEFPStreamListVersion++;
   LOGGER(true, LOGG_NOTIFY, "Added entry")
   return ElasticFrameMessages::noError;
 }
 
-ElasticFrameMessages EFPSignalSend::deleteContent(ElasticFrameContent dataContent, uint8_t streamID) {
+ElasticFrameMessages EFPSignalSend::deleteContent(ElasticFrameContent frameContent, uint8_t streamID) {
   if (streamID == 0) {
     return ElasticFrameMessages::reservedStreamValue;
   }
   std::lock_guard<std::mutex> lock(mStreamListMtx);
-  if (!mIsKnown[streamID][dataContent]) {
+  if (!mIsKnown[streamID][frameContent]) {
     return ElasticFrameMessages::contentNotListed;
   }
 
   int lItemIndex = 0;
-  std::vector<EFPStreamContent> *streamContent = &mEFPStreamLists[streamID];
-  for (auto &rItems: *streamContent) {
-    if (rItems.mVariables.mGFrameContent == dataContent) {
-      streamContent->erase(streamContent->begin() + lItemIndex);
+  std::vector<EFPStreamContent> *lStreamContent = &mEFPStreamLists[streamID];
+  for (auto &rItems: *lStreamContent) {
+    if (rItems.mVariables.mGFrameContent == frameContent) {
+      lStreamContent->erase(lStreamContent->begin() + lItemIndex);
       LOGGER(true, LOGG_NOTIFY, "Deleted entry")
-      mIsKnown[streamID][dataContent] = false;
+      mIsKnown[streamID][frameContent] = false;
       mEFPStreamListVersion++;
     } else {
       lItemIndex++;
     }
   }
-  if (mIsKnown[streamID][dataContent]) {
+  if (mIsKnown[streamID][frameContent]) {
     return ElasticFrameMessages::deleteContentFail;
   }
   return ElasticFrameMessages::noError;
 }
 
-EFPStreamContent EFPSignalSend::getContent(ElasticFrameContent dataContent, uint8_t streamID) {
+ElasticFrameMessages EFPSignalSend::getContent(EFPStreamContent &rStreamContent, ElasticFrameContent frameContent, uint8_t streamID) {
   if (streamID == 0) {
-    return 0;
+    return ElasticFrameMessages::reservedStreamValue;
   }
-  if (!mIsKnown[streamID][dataContent]) {
-    return 0;
+  if (!mIsKnown[streamID][frameContent]) {
+    return ElasticFrameMessages::contentNotListed;
   }
   std::lock_guard<std::mutex> lock(mStreamListMtx);
-  std::vector<EFPStreamContent> *streamContent = &mEFPStreamLists[streamID];
-  for (auto &rItems: *streamContent) {
-    if (rItems.mVariables.mGFrameContent == dataContent) {
-      return rItems;
+  std::vector<EFPStreamContent> *lStreamContent = &mEFPStreamLists[streamID];
+  for (auto &rItem: *lStreamContent) {
+    if (rItem.mVariables.mGFrameContent == frameContent) {
+      rStreamContent = rItem;
+      break;
     }
   }
-  return 0;
+  return ElasticFrameMessages::noError;
 }
 
-json EFPSignalSend::generateJSONStreamInfo(EFPStreamContent &content) {
-  json jsonStream;
+ElasticFrameMessages EFPSignalSend::generateJSONStreamInfo(json &rJsonContent, EFPStreamContent &rStreamContent) {
 
   //General part
-  jsonStream["gdescription_str"] = content.mVariables.mGDescription;
-  jsonStream["gframecontent_u8"] = content.mVariables.mGFrameContent;
-  jsonStream["gstreamid_u8"] = content.mVariables.mGStreamID;
-  jsonStream["gprotectiongroup_u8"] = content.mVariables.mGProtectionGroupID;
-  jsonStream["gsyncgroup_u8"] = content.mVariables.mGSyncGroupID;
-  jsonStream["gpriority_u8"] = content.mVariables.mGPriority;
-  jsonStream["gnotifyhere_u64"] = content.mVariables.mGNotifyHere;
+  rJsonContent["gdescription_str"] = rStreamContent.mVariables.mGDescription;
+  rJsonContent["gframecontent_u8"] = rStreamContent.mVariables.mGFrameContent;
+  rJsonContent["gstreamid_u8"] = rStreamContent.mVariables.mGStreamID;
+  rJsonContent["gprotectiongroup_u8"] = rStreamContent.mVariables.mGProtectionGroupID;
+  rJsonContent["gsyncgroup_u8"] = rStreamContent.mVariables.mGSyncGroupID;
+  rJsonContent["gpriority_u8"] = rStreamContent.mVariables.mGPriority;
+  rJsonContent["gnotifyhere_u64"] = rStreamContent.mVariables.mGNotifyHere;
 
   //Video part
-  jsonStream["vratenum_u32"] = content.mVariables.mVFrameRateNum;
-  jsonStream["vrateden_u32"] = content.mVariables.mVFrameRateDen;
-  jsonStream["vwidth_u32"] = content.mVariables.mVWidth;
-  jsonStream["vheight_u32"] = content.mVariables.mVHeight;
-  jsonStream["vbps_u32"] = content.mVariables.mVBitsPerSec;
+  rJsonContent["vratenum_u32"] = rStreamContent.mVariables.mVFrameRateNum;
+  rJsonContent["vrateden_u32"] = rStreamContent.mVariables.mVFrameRateDen;
+  rJsonContent["vwidth_u32"] = rStreamContent.mVariables.mVWidth;
+  rJsonContent["vheight_u32"] = rStreamContent.mVariables.mVHeight;
+  rJsonContent["vbps_u32"] = rStreamContent.mVariables.mVBitsPerSec;
 
   //Audio part
-  jsonStream["afreqnum_u32"] = content.mVariables.mAFreqNum;
-  jsonStream["afreqden_u32"] = content.mVariables.mAFreqDen;
-  jsonStream["anoch_u32"] = content.mVariables.mANoChannels;
-  jsonStream["achmap_u32"] = content.mVariables.mAChannelMapping;
-  jsonStream["abps_u32"] = content.mVariables.mABitsPerSec;
+  rJsonContent["afreq_u32"] = rStreamContent.mVariables.mAFreq;
+  rJsonContent["anoch_u32"] = rStreamContent.mVariables.mANoChannels;
+  rJsonContent["achmap_u32"] = rStreamContent.mVariables.mAChannelMapping;
+  rJsonContent["abps_u32"] = rStreamContent.mVariables.mABitsPerSec;
 
   //Text part
-  jsonStream["ttype_u32"] = content.mVariables.mTTextType;
-  jsonStream["tlang_str"] = content.mVariables.mTLanguage;
+  rJsonContent["tlang_str"] = rStreamContent.mVariables.mTLanguage;
+  rJsonContent["ttextconfig_str"] = rStreamContent.mVariables.mTextConfig;
 
   //auX part
-  jsonStream["xtype_u32"] = content.mVariables.mXType;
-  jsonStream["xstr_str"] = content.mVariables.mXString;
-  jsonStream["xval_u32"] = content.mVariables.mXValue;
-  return jsonStream;
+  rJsonContent["xtype_u32"] = rStreamContent.mVariables.mXType;
+  rJsonContent["xstr_str"] = rStreamContent.mVariables.mXString;
+  rJsonContent["xval_u32"] = rStreamContent.mVariables.mXValue;
+  return ElasticFrameMessages::noError;
 }
 
 uint32_t EFPSignalSend::signalVersion() {
   return EFP_SIGNAL_VERSION;
 }
 
-json EFPSignalSend::generateAllStreamInfoJSON() {
+ElasticFrameMessages EFPSignalSend::generateAllStreamInfoJSON(json &rJsonContent) {
   std::lock_guard<std::mutex> lock(mStreamListMtx);
-  json jsonAllStreams, tempStreams;
+  json lTempStreams;
   for (int x = 0; x < UINT8_MAX; x++) {
-    std::vector<EFPStreamContent> *streamContent = &mEFPStreamLists[x];
-    if (streamContent->size()) {
-      for (auto &rItems: *streamContent) {
-        json jsonStream = generateJSONStreamInfo(rItems);
-        tempStreams.push_back(jsonStream);
+    std::vector<EFPStreamContent> *lStreamContent = &mEFPStreamLists[x];
+    if (lStreamContent->size()) {
+      for (auto &rItem: *lStreamContent) {
+        json jsonStream;
+        ElasticFrameMessages status = generateJSONStreamInfo(jsonStream, rItem);
+        if (status == ElasticFrameMessages::noError) {
+          lTempStreams.push_back(jsonStream);
+        } else {
+          LOGGER(true, LOGG_ERROR, "ERROR generateAllStreamInfoJSON")
+        }
       }
     }
   }
-  jsonAllStreams["efpstreamversion_u32"] = mEFPStreamListVersion;
-  jsonAllStreams["efpsignalversion_u32"] = EFP_SIGNAL_VERSION;
-  jsonAllStreams["efpstreams_arr"] = tempStreams;
-  return jsonAllStreams;
+  rJsonContent["efpstreamversion_u32"] = mEFPStreamListVersion;
+  rJsonContent["efpsignalversion_u32"] = EFP_SIGNAL_VERSION;
+  rJsonContent["efpstreams_arr"] = lTempStreams;
+  return ElasticFrameMessages::noError;
 }
 
-ElasticFrameMessages EFPSignalSend::generateStreamInfoFromJSON(EFPStreamContent *streamContent, json &content) {
-  bool jsonOK = true;
+ElasticFrameMessages EFPSignalSend::generateStreamInfoFromJSON(EFPStreamContent &rStreamContent, json &rJsonContent) {
+  bool lJsonOK = true;
   json jError;
-  EFPSignalExtraktValuesForKeyV1(streamContent,content,&jError,&jsonOK);
-  if (jsonOK) {
+  EFPSignalExtraktValuesForKeyV1(rStreamContent,rJsonContent,jError,lJsonOK);
+  if (lJsonOK) {
     return ElasticFrameMessages::noError;
   }
   LOGGER(true, LOGG_ERROR, "ERROR parsing JSON EFPStreamContent")
   return ElasticFrameMessages::dataNotJSON;
 }
 
-std::unique_ptr<std::vector<uint8_t>> EFPSignalSend::generateAllStreamInfoData() {
+ElasticFrameMessages EFPSignalSend::generateAllStreamInfoData(std::unique_ptr<std::vector<uint8_t>> &rStreamContentData) {
   std::lock_guard<std::mutex> lock(mStreamListMtx);
-  uint16_t totalBlocks = 0;
+  uint16_t lTotalBlocks = 0;
   for (int x = 0; x < UINT8_MAX; x++) {
-    totalBlocks += mEFPStreamLists[x].size();
+    lTotalBlocks += mEFPStreamLists[x].size();
   }
-  size_t totalByteSize = totalBlocks * sizeof(EFPStreamContent::Variables);
-  totalByteSize += sizeof(EFPStreamContent::BinaryHeaderV1);
-  std::unique_ptr<std::vector<uint8_t>> allData = std::make_unique<std::vector<uint8_t>>(totalByteSize);
-  uint8_t *allDataPtr = allData->data();
+  size_t lTotalByteSize = lTotalBlocks * sizeof(EFPStreamContent::Variables);
+  lTotalByteSize += sizeof(EFPStreamContent::BinaryHeaderV1);
+  std::unique_ptr<std::vector<uint8_t>> lAllData = std::make_unique<std::vector<uint8_t>>(lTotalByteSize);
+  uint8_t *lAllDataPtr = lAllData->data();
   EFPStreamContent::BinaryHeaderV1 lHeader;
   lHeader.mEFPStreamVersion = mEFPStreamListVersion;
-  lHeader.mNumBlocks = totalBlocks;
-  std::memmove(allDataPtr, &lHeader, sizeof(EFPStreamContent::BinaryHeaderV1));
-  allDataPtr += sizeof(EFPStreamContent::BinaryHeaderV1);
+  lHeader.mNumBlocks = lTotalBlocks;
+  std::memmove(lAllDataPtr, &lHeader, sizeof(EFPStreamContent::BinaryHeaderV1));
+  lAllDataPtr += sizeof(EFPStreamContent::BinaryHeaderV1);
 
   for (int x = 0; x < UINT8_MAX; x++) {
     std::vector<EFPStreamContent> *streamContent = &mEFPStreamLists[x];
     if (streamContent->size()) {
       for (auto &rItem: *streamContent) {
-        std::memmove(allDataPtr, &rItem.mVariables, sizeof(EFPStreamContent::Variables));
-        allDataPtr += sizeof(EFPStreamContent::Variables);
+        std::memmove(lAllDataPtr, &rItem.mVariables, sizeof(EFPStreamContent::Variables));
+        lAllDataPtr += sizeof(EFPStreamContent::Variables);
       }
     }
   }
-  return std::move(allData);
+  rStreamContentData=std::move(lAllData);
+  return ElasticFrameMessages::noError;
 }
 
 void EFPSignalSend::sendEmbeddedData() {
   if (mEmbedBinary) {
-    auto rawData = generateAllStreamInfoData();
-    ElasticFrameProtocolSender::packAndSend(*rawData,
-                                            ElasticFrameContent::efpsig,
-                                            0,
-                                            0,
-                                            EFP_CODE('D', 'A', 'T', 'A'),
-                                            0,
-                                            0);
+    std::unique_ptr<std::vector<uint8_t>> lRawData;
+    ElasticFrameMessages lStatus = generateAllStreamInfoData(lRawData);
+    if (lStatus == ElasticFrameMessages::noError) {
+      ElasticFrameProtocolSender::packAndSend(*lRawData,
+                                              ElasticFrameContent::efpsig,
+                                              0,
+                                              0,
+                                              EFP_CODE('D', 'A', 'T', 'A'),
+                                              0,
+                                              0);
+    }
   } else {
-    json embeddedData = generateAllStreamInfoJSON();
-    std::string jsonString = embeddedData.dump();
-    std::vector<uint8_t> jsondata(jsonString.begin(), jsonString.end());
-    ElasticFrameProtocolSender::packAndSend(jsondata,
-                                            ElasticFrameContent::efpsig,
-                                            0,
-                                            0,
-                                            EFP_CODE('J', 'S', 'O', 'N'),
-                                            0,
-                                            0);
+    json lEmbeddedData;
+    ElasticFrameMessages lStatus = generateAllStreamInfoJSON(lEmbeddedData);
+    if (lStatus == ElasticFrameMessages::noError) {
+      std::string jsonString = lEmbeddedData.dump();
+      std::vector<uint8_t> jsondata(jsonString.begin(), jsonString.end());
+      ElasticFrameProtocolSender::packAndSend(jsondata,
+                                              ElasticFrameContent::efpsig,
+                                              0,
+                                              0,
+                                              EFP_CODE('J', 'S', 'O', 'N'),
+                                              0,
+                                              0);
+    }
   }
 }
 
@@ -332,12 +341,12 @@ void EFPSignalSend::signalWorker() {
 
     mStreamListMtx.lock();
     for (int x = 0; x < UINT8_MAX; x++) {
-      std::vector<EFPStreamContent> *streamContent = &mEFPStreamLists[x];
-      if (streamContent->size()) {
+      std::vector<EFPStreamContent> *lStreamContent = &mEFPStreamLists[x];
+      if (lStreamContent->size()) {
         int lItemIndex = 0;
-        for (auto &rItems: *streamContent) {
-          if (!rItems.isStillAlive(100)) {
-            streamContent->erase(streamContent->begin() + lItemIndex);
+        for (auto &rItem: *lStreamContent) {
+          if (!rItem.isStillAlive(100)) {
+            lStreamContent->erase(lStreamContent->begin() + lItemIndex);
             LOGGER(true, LOGG_NOTIFY, "Deleted entry")
             mEFPStreamListVersion++;
           } else {
@@ -360,12 +369,11 @@ void EFPSignalSend::signalWorker() {
         if (mEmbedOnlyChanges && mChangeDetected) {
           mChangeDetected = false;
           sendEmbeddedData();
-        } else {
+        } else if (!mEmbedOnlyChanges) {
           sendEmbeddedData();
         }
       }
     }
-
     mEmbedInterval100msStepsFireCounter--;
   }
   mSignalThreadActive = false;
@@ -373,6 +381,7 @@ void EFPSignalSend::signalWorker() {
 }
 
 void EFPSignalSend::startSignalWorker() {
+  mThreadRunSignal = true;
   std::thread(std::bind(&EFPSignalSend::signalWorker, this)).detach();
 }
 
@@ -394,37 +403,37 @@ uint32_t EFPSignalReceive::signalVersion() {
 
 ElasticFrameMessages EFPSignalReceive::getStreamInformationJSON(uint8_t *data,
                                                             size_t size,
-                                                            std::unique_ptr<EFPSignalReceiveData> &parsedData) {
-  bool jsonOK = true;
-  std::string content((const char *) data, (const char *) data + size);
-  json j, jError;
+                                                            std::unique_ptr<EFPSignalReceiveData> &rParsedData) {
+  bool lJsonOK = true;
+  std::string lContent((const char *) data, (const char *) data + size);
+  json lJson, lJError;
 
   try {
-    j = json::parse(content.c_str());
+    lJson = json::parse(lContent.c_str());
   } catch (const std::exception &e) {
     LOGGER(true, LOGG_ERROR, "Error reading json data -> " << e.what())
     return ElasticFrameMessages::dataNotJSON;
   }
 
-  parsedData->signalVersion = getContentForKey<uint32_t>("efpsignalversion_u32", j, jError, jsonOK);
-  if (!jsonOK)
+  rParsedData->mSignalVersion = getContentForKey<uint32_t>("efpsignalversion_u32", lJson, lJError, lJsonOK);
+  if (!lJsonOK)
     return ElasticFrameMessages::noDataForKey;
-  parsedData->streamVersion = getContentForKey<uint32_t>("efpstreamversion_u32", j, jError, jsonOK);
-  if (!jsonOK)
+  rParsedData->mStreamVersion = getContentForKey<uint32_t>("efpstreamversion_u32", lJson, lJError, lJsonOK);
+  if (!lJsonOK)
     return ElasticFrameMessages::noDataForKey;
   //auto streams = getContentForKey<std::string>("efpstreams_arr", j, jError, jsonOK);
 
   try {
-    auto streams = j["efpstreams_arr"];
+    auto lStreams = lJson["efpstreams_arr"];
 
-    for (auto &element : streams) {
+    for (auto &element : lStreams) {
       EFPStreamContent newContent(UINT32_MAX);
-      EFPSignalExtraktValuesForKeyV1(&newContent,element,&jError,&jsonOK);
-      if (jsonOK) {
-        parsedData->contentList.push_back(newContent);
+      EFPSignalExtraktValuesForKeyV1(newContent,element,lJError,lJsonOK);
+      if (lJsonOK) {
+        rParsedData->mContentList.push_back(newContent);
       } else {
         LOGGER(true, LOGG_ERROR, "ERROR parsing EFPStreamContent")
-        jsonOK = true;
+        lJsonOK = true;
       }
     }
   } catch (const std::exception &e) {
@@ -447,14 +456,14 @@ ElasticFrameMessages EFPSignalReceive::getStreamInformationData(uint8_t *data,
     return ElasticFrameMessages::noDataForKey; //Fixme
   }
    if (lHeaderV1.mHeaderVersion == 1) {
-     parsedData->signalVersion = lHeaderV1.mEFPSignalversion;
-     parsedData->streamVersion = lHeaderV1.mEFPStreamVersion;
-     uint8_t *allDataPtr = data + sizeof(EFPStreamContent::BinaryHeaderV1);
+     parsedData->mSignalVersion = lHeaderV1.mEFPSignalversion;
+     parsedData->mStreamVersion = lHeaderV1.mEFPStreamVersion;
+     uint8_t *lAllDataPtr = data + sizeof(EFPStreamContent::BinaryHeaderV1);
      for (int x = 0 ; x<lHeaderV1.mNumBlocks ; x++) {
        EFPStreamContent newContent(UINT32_MAX);
-       std::memmove(&newContent.mVariables, allDataPtr, sizeof(EFPStreamContent::Variables));
-       allDataPtr += sizeof(EFPStreamContent::Variables);
-       parsedData->contentList.push_back(newContent);
+       std::memmove(&newContent.mVariables, lAllDataPtr, sizeof(EFPStreamContent::Variables));
+       lAllDataPtr += sizeof(EFPStreamContent::Variables);
+       parsedData->mContentList.push_back(newContent);
      }
    } else {
      return ElasticFrameMessages::noDataForKey; //Fixme
@@ -466,16 +475,16 @@ ElasticFrameMessages EFPSignalReceive::getStreamInformationData(uint8_t *data,
 void EFPSignalReceive::gotData(ElasticFrameProtocolReceiver::pFramePtr &packet) {
   if (packet->mDataContent == ElasticFrameContent::efpsig) {
     if (this->contentInformationCallback) {
-      std::unique_ptr<EFPSignalReceiveData> myData = std::make_unique<EFPSignalReceiveData>();
+      std::unique_ptr<EFPSignalReceiveData> lMyData = std::make_unique<EFPSignalReceiveData>();
       if (packet->mCode == EFP_CODE('J','S','O','N')) {
-        ElasticFrameMessages status = getStreamInformationJSON(packet->pFrameData, packet->mFrameSize, myData);
-        if (status != ElasticFrameMessages::noError) {
+        ElasticFrameMessages lStatus = getStreamInformationJSON(packet->pFrameData, packet->mFrameSize, lMyData);
+        if (lStatus != ElasticFrameMessages::noError) {
           LOGGER(true, LOGG_ERROR, "ERROR parsing EFPStreamContent JSON")
           return;
         }
       } else if (packet->mCode == EFP_CODE('D','A','T','A'))  {
-        ElasticFrameMessages status = getStreamInformationData(packet->pFrameData, packet->mFrameSize, myData);
-        if (status != ElasticFrameMessages::noError) {
+        ElasticFrameMessages lStatus = getStreamInformationData(packet->pFrameData, packet->mFrameSize, lMyData);
+        if (lStatus != ElasticFrameMessages::noError) {
           LOGGER(true, LOGG_ERROR, "ERROR parsing EFPStreamContent DATA")
           return;
         }
@@ -483,7 +492,7 @@ void EFPSignalReceive::gotData(ElasticFrameProtocolReceiver::pFramePtr &packet) 
         LOGGER(true, LOGG_ERROR, "Unknown EFPStreamContent")
         return;
       }
-      this->contentInformationCallback(myData);
+      this->contentInformationCallback(lMyData);
       return;
     } else {
       LOGGER(true, LOGG_ERROR, "contentInformationCallback not defined")
