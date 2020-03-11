@@ -159,6 +159,7 @@ int main() {
   }
 
   std::this_thread::sleep_for(std::chrono::seconds(2));
+  myEFPSignalSend.mBinaryMode = false;
 
   std::cout << "Add fake" << std::endl;
   EFPStreamContent fakeContent2(1500);
@@ -188,7 +189,7 @@ int main() {
     return EXIT_FAILURE;
   }
 
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::seconds(2));
 
   status = myEFPSignalSend.generateAllStreamInfoJSON(myStreamInfo);
   if (status != ElasticFrameMessages::noError) {

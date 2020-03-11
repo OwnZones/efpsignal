@@ -49,6 +49,13 @@ void EFPSignalExtraktValuesForKeyV1(EFPStreamContent &newContent, json &element,
 //
 //---------------------------------------------------------------------------------------------------------------------
 
+EFPSignalSend::EFPSignalSend(uint16_t setMTU, uint32_t garbageCollectms) : ElasticFrameProtocolSender(setMTU){
+  mEFPStreamLists.reserve(256);
+  mGarbageCollectms = garbageCollectms;
+  startSignalWorker();
+  LOGGER(true, LOGG_NOTIFY, "EFPSignal construct")
+}
+
 EFPSignalSend::~EFPSignalSend() {
   mThreadRunSignal = false;
   uint32_t lLockProtect = 1000;
@@ -407,6 +414,11 @@ void EFPSignalSend::startSignalWorker() {
 //
 //---------------------------------------------------------------------------------------------------------------------
 
+EFPSignalReceive::EFPSignalReceive(uint32_t bucketTimeoutMaster, uint32_t holTimeoutMaster) : ElasticFrameProtocolReceiver(bucketTimeoutMaster,holTimeoutMaster){
+  ElasticFrameProtocolReceiver::receiveCallback = std::bind(&EFPSignalReceive::gotData, this, std::placeholders::_1);
+  LOGGER(true, LOGG_NOTIFY, "EFPSignalReceive construct")
+}
+
 EFPSignalReceive::~EFPSignalReceive() {
   LOGGER(true, LOGG_NOTIFY, "EFPSignalReceive destruct")
 }
@@ -516,3 +528,4 @@ void EFPSignalReceive::gotData(ElasticFrameProtocolReceiver::pFramePtr &packet) 
     }
   }
 }
+

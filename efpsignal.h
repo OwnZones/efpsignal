@@ -126,23 +126,19 @@ class EFPSignalSend : public ElasticFrameProtocolSender {
 public:
 
   ///Constructor
-  explicit EFPSignalSend(uint16_t setMTU, uint32_t garbageCollectms ) : ElasticFrameProtocolSender(setMTU){
-    mEFPStreamLists.reserve(256);
-    mGarbageCollectms = garbageCollectms;
-    startSignalWorker();
-  };
+  explicit EFPSignalSend(uint16_t setMTU, uint32_t garbageCollectms);
 
   ///Destructor
-  virtual ~EFPSignalSend();
+  ~EFPSignalSend() override;
 
   ElasticFrameMessages
   packAndSend(const std::vector<uint8_t> &rPacket, ElasticFrameContent frameContent, uint64_t pts, uint64_t dts,
               uint32_t code,
-              uint8_t streamID, uint8_t flags);
+              uint8_t streamID, uint8_t flags) override;
 
   ElasticFrameMessages
   packAndSendFromPtr(const uint8_t* pPacket, size_t packetSize, ElasticFrameContent frameContent, uint64_t pts, uint64_t dts,
-                     uint32_t code, uint8_t streamID, uint8_t flags);
+                     uint32_t code, uint8_t streamID, uint8_t flags) override;
 
 
   ElasticFrameMessages registerContent(EFPStreamContent &rStreamContent);
@@ -190,8 +186,8 @@ private:
   bool mIsKnown[UINT8_MAX+1][UINT8_MAX+1] = {false};
   std::mutex mStreamListMtx; //Mutex protecting the stream lists
   std::vector<std::vector<EFPStreamContent>> mEFPStreamLists;
-  std::atomic_bool mThreadRunSignal;
-  std::atomic_bool mSignalThreadActive;
+  std::atomic_bool mThreadRunSignal{};
+  std::atomic_bool mSignalThreadActive{};
 };
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -213,12 +209,10 @@ public:
   };
 
   ///Constructor
-  explicit EFPSignalReceive(uint32_t bucketTimeoutMaster, uint32_t holTimeoutMaster ) : ElasticFrameProtocolReceiver(bucketTimeoutMaster,holTimeoutMaster){
-    ElasticFrameProtocolReceiver::receiveCallback = std::bind(&EFPSignalReceive::gotData, this, std::placeholders::_1);
-  }
+  explicit EFPSignalReceive(uint32_t bucketTimeoutMaster, uint32_t holTimeoutMaster );
 
   ///Destructor
-  virtual ~EFPSignalReceive();
+  ~EFPSignalReceive() override;
 
   ElasticFrameMessages getStreamInformationJSON(uint8_t *data, size_t size, std::unique_ptr<EFPSignalReceiveData>& parsedData);
   ElasticFrameMessages getStreamInformationData(uint8_t *data, size_t size, std::unique_ptr<EFPSignalReceiveData>& parsedData);
