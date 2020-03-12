@@ -13,6 +13,7 @@ void EFPSignalExtraktValuesForKeyV1(EFPStreamContent &newContent, json &element,
   newContent.mVariables.mGFrameContent =
       getContentForKey<ElasticFrameContent>("gframecontent_u8", element, jError, jsonOK);
   newContent.mVariables.mGStreamID = getContentForKey<uint8_t>("gstreamid_u8", element, jError, jsonOK);
+  newContent.mVariables.mGChanged = getContentForKey<uint8_t>("gchanged_u8", element, jError, jsonOK);
   newContent.mVariables.mGProtectionGroupID =
       getContentForKey<uint8_t>("gprotectiongroup_u8", element, jError, jsonOK);
   newContent.mVariables.mGSyncGroupID = getContentForKey<uint8_t>("gsyncgroup_u8", element, jError, jsonOK);
@@ -72,8 +73,8 @@ EFPSignalSend::~EFPSignalSend() {
 }
 
 ElasticFrameMessages EFPSignalSend::signalFilter(ElasticFrameContent dataContent, uint8_t streamID, uint32_t *dataMessage) {
+  std::lock_guard<std::mutex> lock(mStreamListMtx);
   if (mIsKnown[streamID][dataContent]) {
-    std::lock_guard<std::mutex> lock(mStreamListMtx);
     std::vector<EFPStreamContent> *lStreamContent = &mEFPStreamLists[streamID];
     for (auto &rItem: *lStreamContent) {
       if (rItem.mVariables.mGFrameContent == dataContent) {
@@ -97,7 +98,7 @@ ElasticFrameMessages EFPSignalSend::signalFilter(ElasticFrameContent dataContent
       if (declareContentCallback) {
         lNewContent.mWhiteListed = declareContentCallback(lNewContent);
       }
-      std::lock_guard<std::mutex> lock(mStreamListMtx);
+      lNewContent.mVariables.mGChanged = 1;
       mEFPStreamLists[streamID].push_back(lNewContent);
       mIsKnown[streamID][dataContent] = true;
       LOGGER(true, LOGG_NOTIFY, "Added entry")
@@ -160,7 +161,7 @@ EFPSignalSend::packAndSendFromPtr(const uint8_t *pPacket,
                                                         flags);
 }
 
-ElasticFrameMessages EFPSignalSend::clearAll() {
+ElasticFrameMessages EFPSignalSend::clearAllContent() {
   std::lock_guard<std::mutex> lock(mStreamListMtx);
   for (int x = 0; x < UINT8_MAX; x++) {
     for (int y = 0; y < UINT8_MAX; y++) {
@@ -174,7 +175,7 @@ ElasticFrameMessages EFPSignalSend::clearAll() {
   return ElasticFrameMessages::noError;
 }
 
-ElasticFrameMessages EFPSignalSend::registerContent(EFPStreamContent &rStreamContent) {
+ElasticFrameMessages EFPSignalSend::addContent(EFPStreamContent &rStreamContent) {
   uint8_t lStreamID = rStreamContent.mVariables.mGStreamID;
   if (lStreamID == 0) {
     return ElasticFrameMessages::reservedStreamValue;
@@ -186,6 +187,7 @@ ElasticFrameMessages EFPSignalSend::registerContent(EFPStreamContent &rStreamCon
   }
 
   std::lock_guard<std::mutex> lock(mStreamListMtx);
+  rStreamContent.mVariables.mGChanged = 1;
   mEFPStreamLists[lStreamID].push_back(rStreamContent);
   mIsKnown[lStreamID][lDataContent] = true;
   mEFPStreamListVersion++;
@@ -234,6 +236,7 @@ ElasticFrameMessages EFPSignalSend::modifyContent(ElasticFrameContent frameConte
   for (auto &rItem: *lStreamContent) {
     if (rItem.mVariables.mGFrameContent == frameContent) {
       function(rItem);
+      rItem.mVariables.mGChanged= 1;
       lFound = true;
       break;
     }
@@ -257,7 +260,8 @@ ElasticFrameMessages EFPSignalSend::getContent(EFPStreamContent &rStreamContent,
   std::vector<EFPStreamContent> *lStreamContent = &mEFPStreamLists[streamID];
   for (auto &rItem: *lStreamContent) {
     if (rItem.mVariables.mGFrameContent == frameContent) {
-      rStreamContent = rItem;
+      rStreamContent = rItem; //This should implicitly create a copy. since rStreamContent and rItem are references.
+      // Think about this -> rItem.mVariables.mGChanged = 0; //We peeked at the content it's not marked as changed anymore.
       break;
     }
   }
@@ -270,6 +274,7 @@ ElasticFrameMessages EFPSignalSend::generateJSONStreamInfo(json &rJsonContent, E
   rJsonContent["gdescription_str"] = rStreamContent.mVariables.mGDescription;
   rJsonContent["gframecontent_u8"] = rStreamContent.mVariables.mGFrameContent;
   rJsonContent["gstreamid_u8"] = rStreamContent.mVariables.mGStreamID;
+  rJsonContent["gchanged_u8"] = rStreamContent.mVariables.mGChanged;
   rJsonContent["gprotectiongroup_u8"] = rStreamContent.mVariables.mGProtectionGroupID;
   rJsonContent["gsyncgroup_u8"] = rStreamContent.mVariables.mGSyncGroupID;
   rJsonContent["gpriority_u8"] = rStreamContent.mVariables.mGPriority;
@@ -312,6 +317,7 @@ ElasticFrameMessages EFPSignalSend::generateAllStreamInfoJSON(json &rJsonContent
       for (auto &rItem: *lStreamContent) {
         json jsonStream;
         ElasticFrameMessages status = generateJSONStreamInfo(jsonStream, rItem);
+        rItem.mVariables.mGChanged = 0;
         if (status == ElasticFrameMessages::noError) {
           lTempStreams.push_back(jsonStream);
         } else {
@@ -358,6 +364,7 @@ ElasticFrameMessages EFPSignalSend::generateAllStreamInfoData(std::unique_ptr<st
     if (streamContent->size()) {
       for (auto &rItem: *streamContent) {
         std::memmove(lAllDataPtr, &rItem.mVariables, sizeof(EFPStreamContent::Variables));
+        rItem.mVariables.mGChanged = 0;
         lAllDataPtr += sizeof(EFPStreamContent::Variables);
       }
     }
@@ -416,23 +423,25 @@ void EFPSignalSend::signalWorker() {
     //Run signal worker 10 times per second
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    mStreamListMtx.lock();
-    for (int x = 0; x < UINT8_MAX; x++) {
-      std::vector<EFPStreamContent> *lStreamContent = &mEFPStreamLists[x];
-      if (lStreamContent->size()) {
-        int lItemIndex = 0;
-        for (auto &rItem: *lStreamContent) {
-          if (!rItem.isStillAlive(100)) {
-            lStreamContent->erase(lStreamContent->begin() + lItemIndex);
-            LOGGER(true, LOGG_NOTIFY, "Deleted entry")
-            mEFPStreamListVersion++;
-          } else {
-            lItemIndex++;
+
+    { //  < Lock wrapper start >
+      std::lock_guard<std::mutex> lock(mStreamListMtx);
+      for (int x = 0; x < UINT8_MAX; x++) {
+        std::vector<EFPStreamContent> *lStreamContent = &mEFPStreamLists[x];
+        if (lStreamContent->size()) {
+          int lItemIndex = 0;
+          for (auto &rItem: *lStreamContent) {
+            if (!rItem.isStillAlive(100)) {
+              lStreamContent->erase(lStreamContent->begin() + lItemIndex);
+              LOGGER(true, LOGG_NOTIFY, "Deleted entry")
+              mEFPStreamListVersion++;
+            } else {
+              lItemIndex++;
+            }
           }
         }
       }
-    }
-    mStreamListMtx.unlock();
+    } //  < Lock wrapper end >
 
     if (mEFPStreamListVersion != mOldEFPStreamListVersion) {
       LOGGER(true, LOGG_NOTIFY, "ListChanged")

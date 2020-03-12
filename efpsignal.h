@@ -65,12 +65,13 @@ public:
 
   bool mWhiteListed = false;
 
+
   struct Variables {
     //General part
     std::string mGDescription = "";
     ElasticFrameContent mGFrameContent = ElasticFrameContent::unknown;
-    uint8_t mGContentCycle = 0;
     uint8_t mGStreamID = 0;
+    uint8_t mGChanged = 0;
     uint8_t mGProtectionGroupID = 0;
     uint8_t mGSyncGroupID = 0;
     uint8_t mGPriority = 0;
@@ -150,8 +151,8 @@ public:
   packAndSendFromPtr(const uint8_t* pPacket, size_t packetSize, ElasticFrameContent frameContent, uint64_t pts, uint64_t dts,
                      uint32_t code, uint8_t streamID, uint8_t flags) override;
 
-  ElasticFrameMessages clearAll();
-  ElasticFrameMessages registerContent(EFPStreamContent &rStreamContent);
+  ElasticFrameMessages clearAllContent();
+  ElasticFrameMessages addContent(EFPStreamContent &rStreamContent);
   ElasticFrameMessages deleteContent(ElasticFrameContent frameContent, uint8_t streamID);
   ElasticFrameMessages getContent(EFPStreamContent &rStreamContent, ElasticFrameContent frameContent, uint8_t streamID);
   ElasticFrameMessages modifyContent(ElasticFrameContent frameContent, uint8_t streamID, std::function<void(EFPStreamContent &)> function);
