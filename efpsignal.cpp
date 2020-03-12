@@ -71,14 +71,19 @@ EFPSignalSend::~EFPSignalSend() {
   LOGGER(true, LOGG_NOTIFY, "EFPSignal destruct")
 }
 
-ElasticFrameMessages EFPSignalSend::signalFilter(ElasticFrameContent dataContent, uint8_t streamID) {
+ElasticFrameMessages EFPSignalSend::signalFilter(ElasticFrameContent dataContent, uint8_t streamID, uint32_t *dataMessage) {
   if (mIsKnown[streamID][dataContent]) {
     std::lock_guard<std::mutex> lock(mStreamListMtx);
     std::vector<EFPStreamContent> *lStreamContent = &mEFPStreamLists[streamID];
-    for (auto &rItems: *lStreamContent) {
-      if (rItems.mVariables.mGFrameContent == dataContent) {
-        rItems.resetTTL();
-        if (!rItems.mWhiteListed) {
+    for (auto &rItem: *lStreamContent) {
+      if (rItem.mVariables.mGFrameContent == dataContent) {
+        rItem.resetTTL();
+
+        if (rItem.mVariables.mGSyncGroupID) {
+          *dataMessage = 1; //Signal the frame is part of a sync group
+        }
+
+        if (!rItem.mWhiteListed) {
           return ElasticFrameMessages::efpSignalDropped;
         }
         break;
@@ -90,7 +95,7 @@ ElasticFrameMessages EFPSignalSend::signalFilter(ElasticFrameContent dataContent
       lNewContent.mVariables.mGStreamID = streamID;
       lNewContent.mVariables.mGFrameContent = dataContent;
       if (declareContentCallback) {
-        lNewContent.mWhiteListed = declareContentCallback(&lNewContent);
+        lNewContent.mWhiteListed = declareContentCallback(lNewContent);
       }
       std::lock_guard<std::mutex> lock(mStreamListMtx);
       mEFPStreamLists[streamID].push_back(lNewContent);
@@ -105,6 +110,8 @@ ElasticFrameMessages EFPSignalSend::signalFilter(ElasticFrameContent dataContent
   return ElasticFrameMessages::noError;
 }
 
+
+
 ElasticFrameMessages
 EFPSignalSend::packAndSend(const std::vector<uint8_t> &rPacket,
                            ElasticFrameContent frameContent,
@@ -114,7 +121,11 @@ EFPSignalSend::packAndSend(const std::vector<uint8_t> &rPacket,
                            uint8_t streamID,
                            uint8_t flags) {
 
-  ElasticFrameMessages lSignalMsg = signalFilter(frameContent, streamID);
+  uint32_t lSignalFilterDataMessage = 0;
+  ElasticFrameMessages lSignalMsg = signalFilter(frameContent, streamID, &lSignalFilterDataMessage);
+  if (lSignalFilterDataMessage == 1) {
+
+  }
   if (lSignalMsg != ElasticFrameMessages::noError) {
     return lSignalMsg;
   }
@@ -130,7 +141,12 @@ EFPSignalSend::packAndSendFromPtr(const uint8_t *pPacket,
                                   uint32_t code,
                                   uint8_t streamID,
                                   uint8_t flags) {
-  ElasticFrameMessages lSignalMsg = signalFilter(frameContent, streamID);
+  uint32_t lSignalFilterDataMessage = 0;
+  ElasticFrameMessages lSignalMsg = signalFilter(frameContent, streamID, &lSignalFilterDataMessage);
+  if (lSignalFilterDataMessage == 1) {
+
+  }
+
   if (lSignalMsg != ElasticFrameMessages::noError) {
     return lSignalMsg;
   }
@@ -142,6 +158,20 @@ EFPSignalSend::packAndSendFromPtr(const uint8_t *pPacket,
                                                         code,
                                                         streamID,
                                                         flags);
+}
+
+ElasticFrameMessages EFPSignalSend::clearAll() {
+  std::lock_guard<std::mutex> lock(mStreamListMtx);
+  for (int x = 0; x < UINT8_MAX; x++) {
+    for (int y = 0; y < UINT8_MAX; y++) {
+      mIsKnown[x][y] = false;
+    }
+    std::vector<EFPStreamContent> *lStreamContent = &mEFPStreamLists[x];
+    if (lStreamContent->size()) {
+      lStreamContent->clear();
+    }
+  }
+  return ElasticFrameMessages::noError;
 }
 
 ElasticFrameMessages EFPSignalSend::registerContent(EFPStreamContent &rStreamContent) {
@@ -174,8 +204,8 @@ ElasticFrameMessages EFPSignalSend::deleteContent(ElasticFrameContent frameConte
 
   int lItemIndex = 0;
   std::vector<EFPStreamContent> *lStreamContent = &mEFPStreamLists[streamID];
-  for (auto &rItems: *lStreamContent) {
-    if (rItems.mVariables.mGFrameContent == frameContent) {
+  for (auto &rItem: *lStreamContent) {
+    if (rItem.mVariables.mGFrameContent == frameContent) {
       lStreamContent->erase(lStreamContent->begin() + lItemIndex);
       LOGGER(true, LOGG_NOTIFY, "Deleted entry")
       mIsKnown[streamID][frameContent] = false;
@@ -186,6 +216,30 @@ ElasticFrameMessages EFPSignalSend::deleteContent(ElasticFrameContent frameConte
   }
   if (mIsKnown[streamID][frameContent]) {
     return ElasticFrameMessages::deleteContentFail;
+  }
+  return ElasticFrameMessages::noError;
+}
+
+ElasticFrameMessages EFPSignalSend::modifyContent(ElasticFrameContent frameContent, uint8_t streamID, std::function<void(EFPStreamContent &)> function){
+  if (streamID == 0) {
+    return ElasticFrameMessages::reservedStreamValue;
+  }
+  std::lock_guard<std::mutex> lock(mStreamListMtx);
+  if (!mIsKnown[streamID][frameContent]) {
+    return ElasticFrameMessages::contentNotListed;
+  }
+
+  bool lFound = false;
+  std::vector<EFPStreamContent> *lStreamContent = &mEFPStreamLists[streamID];
+  for (auto &rItem: *lStreamContent) {
+    if (rItem.mVariables.mGFrameContent == frameContent) {
+      function(rItem);
+      lFound = true;
+      break;
+    }
+  }
+  if (!lFound) {
+    return ElasticFrameMessages::contentNotListed;
   }
   return ElasticFrameMessages::noError;
 }

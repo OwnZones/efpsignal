@@ -63,7 +63,6 @@ public:
     mCurrentTimeToLivems = mTimeToLivems;
   }
 
-
   bool mWhiteListed = false;
 
   struct Variables {
@@ -125,6 +124,17 @@ private:
 class EFPSignalSend : public ElasticFrameProtocolSender {
 public:
 
+  class SyncGroup {
+  public:
+    class SyncItem{
+    public:
+      uint8_t mStreamID = 0;
+      std::vector<uint8_t> data;
+    };
+    uint8_t mSyncGroupID = 0;
+    std::vector<SyncItem> items;
+  };
+
   ///Constructor
   explicit EFPSignalSend(uint16_t setMTU, uint32_t garbageCollectms);
 
@@ -140,19 +150,19 @@ public:
   packAndSendFromPtr(const uint8_t* pPacket, size_t packetSize, ElasticFrameContent frameContent, uint64_t pts, uint64_t dts,
                      uint32_t code, uint8_t streamID, uint8_t flags) override;
 
-
+  ElasticFrameMessages clearAll();
   ElasticFrameMessages registerContent(EFPStreamContent &rStreamContent);
   ElasticFrameMessages deleteContent(ElasticFrameContent frameContent, uint8_t streamID);
   ElasticFrameMessages getContent(EFPStreamContent &rStreamContent, ElasticFrameContent frameContent, uint8_t streamID);
+  ElasticFrameMessages modifyContent(ElasticFrameContent frameContent, uint8_t streamID, std::function<void(EFPStreamContent &)> function);
   ElasticFrameMessages generateJSONStreamInfo(json &rJsonContent, EFPStreamContent &rStreamContent);
   ElasticFrameMessages generateStreamInfoFromJSON(EFPStreamContent &rStreamContent, json &rJsonContent);
   ElasticFrameMessages generateAllStreamInfoJSON(json &rJsonContent);
   ElasticFrameMessages generateAllStreamInfoData(std::unique_ptr<std::vector<uint8_t>> &rStreamContentData);
   uint32_t signalVersion();
 
-  std::function<bool(EFPStreamContent* content)> declareContentCallback = nullptr;
+  std::function<bool(EFPStreamContent& content)> declareContentCallback = nullptr;
   std::function<void(std::unique_ptr<std::vector<uint8_t>> &rStreamContentData, json &rJsonContent)> declarationCallback = nullptr;
-
 
   ///Delete copy and move constructors and assign operators
   EFPSignalSend(EFPSignalSend const &) = delete;              // Copy construct
@@ -177,7 +187,7 @@ private:
   void startSignalWorker();
   void signalWorker();
   void sendEmbeddedData();
-  ElasticFrameMessages signalFilter(ElasticFrameContent dataContent, uint8_t streamID);
+  ElasticFrameMessages signalFilter(ElasticFrameContent dataContent, uint8_t streamID, uint32_t *dataMessage);
 
   bool mChangeDetected = false;
   uint32_t mEmbedInterval100msStepsFireCounter = 0;
@@ -186,6 +196,7 @@ private:
   bool mIsKnown[UINT8_MAX+1][UINT8_MAX+1] = {false};
   std::mutex mStreamListMtx; //Mutex protecting the stream lists
   std::vector<std::vector<EFPStreamContent>> mEFPStreamLists;
+  std::vector<SyncGroup> mSyncGroups;
   std::atomic_bool mThreadRunSignal{};
   std::atomic_bool mSignalThreadActive{};
 };
