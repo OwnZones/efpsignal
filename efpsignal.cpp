@@ -268,7 +268,7 @@ ElasticFrameMessages EFPSignalSend::getContent(EFPStreamContent &rStreamContent,
   return ElasticFrameMessages::noError;
 }
 
-ElasticFrameMessages EFPSignalSend::generateJSONStreamInfo(json &rJsonContent, EFPStreamContent &rStreamContent) {
+ElasticFrameMessages EFPSignalSend::generateJSONStreamInfoFromData(json &rJsonContent, EFPStreamContent &rStreamContent) {
 
   //General part
   rJsonContent["gdescription_str"] = rStreamContent.mVariables.mGDescription;
@@ -308,20 +308,22 @@ uint32_t EFPSignalSend::signalVersion() {
   return EFP_SIGNAL_VERSION;
 }
 
-ElasticFrameMessages EFPSignalSend::generateAllStreamInfoJSON(json &rJsonContent) {
+ElasticFrameMessages EFPSignalSend::generateAllStreamInfoJSON(json &rJsonContent,  bool deltasOnly) {
   std::lock_guard<std::mutex> lock(mStreamListMtx);
   json lTempStreams;
   for (int x = 0; x < UINT8_MAX; x++) {
     std::vector<EFPStreamContent> *lStreamContent = &mEFPStreamLists[x];
     if (lStreamContent->size()) {
       for (auto &rItem: *lStreamContent) {
-        json jsonStream;
-        ElasticFrameMessages status = generateJSONStreamInfo(jsonStream, rItem);
-        rItem.mVariables.mGChanged = 0;
-        if (status == ElasticFrameMessages::noError) {
-          lTempStreams.push_back(jsonStream);
-        } else {
-          LOGGER(true, LOGG_ERROR, "ERROR generateAllStreamInfoJSON")
+        if ((deltasOnly && rItem.mVariables.mGChanged == 1) || !deltasOnly) {
+          json jsonStream;
+          ElasticFrameMessages status = generateJSONStreamInfoFromData(jsonStream, rItem);
+          rItem.mVariables.mGChanged = 0;
+          if (status == ElasticFrameMessages::noError) {
+            lTempStreams.push_back(jsonStream);
+          } else {
+            LOGGER(true, LOGG_ERROR, "ERROR generateAllStreamInfoJSON")
+          }
         }
       }
     }
@@ -332,7 +334,7 @@ ElasticFrameMessages EFPSignalSend::generateAllStreamInfoJSON(json &rJsonContent
   return ElasticFrameMessages::noError;
 }
 
-ElasticFrameMessages EFPSignalSend::generateStreamInfoFromJSON(EFPStreamContent &rStreamContent, json &rJsonContent) {
+ElasticFrameMessages EFPSignalSend::generateDataStreamInfoFromJSON(EFPStreamContent &rStreamContent, json &rJsonContent) {
   bool lJsonOK = true;
   json jError;
   EFPSignalExtraktValuesForKeyV1(rStreamContent, rJsonContent, jError, lJsonOK);
@@ -343,11 +345,19 @@ ElasticFrameMessages EFPSignalSend::generateStreamInfoFromJSON(EFPStreamContent 
   return ElasticFrameMessages::dataNotJSON;
 }
 
-ElasticFrameMessages EFPSignalSend::generateAllStreamInfoData(std::unique_ptr<std::vector<uint8_t>> &rStreamContentData) {
+ElasticFrameMessages EFPSignalSend::generateAllStreamInfoData(std::unique_ptr<std::vector<uint8_t>> &rStreamContentData,  bool deltasOnly) {
   std::lock_guard<std::mutex> lock(mStreamListMtx);
   uint16_t lTotalBlocks = 0;
   for (int x = 0; x < UINT8_MAX; x++) {
-    lTotalBlocks += mEFPStreamLists[x].size();
+    std::vector<EFPStreamContent> *streamContent = &mEFPStreamLists[x];
+    if (streamContent->size()) {
+      for (auto &rItem: *streamContent) {
+        if ((deltasOnly && rItem.mVariables.mGChanged == 1) || !deltasOnly) {
+          lTotalBlocks++;
+        }
+      }
+    }
+   // lTotalBlocks += mEFPStreamLists[x].size();
   }
   size_t lTotalByteSize = lTotalBlocks * sizeof(EFPStreamContent::Variables);
   lTotalByteSize += sizeof(EFPStreamContent::BinaryHeaderV1);
@@ -363,9 +373,11 @@ ElasticFrameMessages EFPSignalSend::generateAllStreamInfoData(std::unique_ptr<st
     std::vector<EFPStreamContent> *streamContent = &mEFPStreamLists[x];
     if (streamContent->size()) {
       for (auto &rItem: *streamContent) {
-        std::memmove(lAllDataPtr, &rItem.mVariables, sizeof(EFPStreamContent::Variables));
-        rItem.mVariables.mGChanged = 0;
-        lAllDataPtr += sizeof(EFPStreamContent::Variables);
+        if ((deltasOnly && rItem.mVariables.mGChanged == 1) || !deltasOnly) {
+          std::memmove(lAllDataPtr, &rItem.mVariables, sizeof(EFPStreamContent::Variables));
+          rItem.mVariables.mGChanged = 0;
+          lAllDataPtr += sizeof(EFPStreamContent::Variables);
+        }
       }
     }
   }
@@ -373,10 +385,10 @@ ElasticFrameMessages EFPSignalSend::generateAllStreamInfoData(std::unique_ptr<st
   return ElasticFrameMessages::noError;
 }
 
-void EFPSignalSend::sendEmbeddedData() {
+ElasticFrameMessages EFPSignalSend::sendEmbeddedData(bool deltasOnly) {
   if (mBinaryMode) {
     std::unique_ptr<std::vector<uint8_t>> lRawData;
-    ElasticFrameMessages lStatus = generateAllStreamInfoData(lRawData);
+    ElasticFrameMessages lStatus = generateAllStreamInfoData(lRawData, deltasOnly);
     if (lStatus == ElasticFrameMessages::noError) {
       if (mEmbedInStream) {
         ElasticFrameProtocolSender::packAndSend(*lRawData,
@@ -395,7 +407,7 @@ void EFPSignalSend::sendEmbeddedData() {
     }
   } else {
     json lEmbeddedData;
-    ElasticFrameMessages lStatus = generateAllStreamInfoJSON(lEmbeddedData);
+    ElasticFrameMessages lStatus = generateAllStreamInfoJSON(lEmbeddedData, deltasOnly);
     if (lStatus == ElasticFrameMessages::noError) {
       std::string jsonString = lEmbeddedData.dump();
       std::vector<uint8_t> jsondata(jsonString.begin(), jsonString.end());
@@ -415,6 +427,7 @@ void EFPSignalSend::sendEmbeddedData() {
       }
     }
   }
+  return ElasticFrameMessages::noError;
 }
 
 void EFPSignalSend::signalWorker() {
@@ -453,9 +466,9 @@ void EFPSignalSend::signalWorker() {
       mEmbedInterval100msStepsFireCounter = mEmbedInterval100msSteps;
       if (mTriggerChanges && mChangeDetected) {
         mChangeDetected = false;
-        sendEmbeddedData();
+        sendEmbeddedData(mEmbedDeltas);
       } else if (!mTriggerChanges) {
-        sendEmbeddedData();
+        sendEmbeddedData(mEmbedDeltas);
       }
     }
     mEmbedInterval100msStepsFireCounter--;

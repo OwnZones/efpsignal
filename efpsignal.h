@@ -156,10 +156,11 @@ public:
   ElasticFrameMessages deleteContent(ElasticFrameContent frameContent, uint8_t streamID);
   ElasticFrameMessages getContent(EFPStreamContent &rStreamContent, ElasticFrameContent frameContent, uint8_t streamID);
   ElasticFrameMessages modifyContent(ElasticFrameContent frameContent, uint8_t streamID, std::function<void(EFPStreamContent &)> function);
-  ElasticFrameMessages generateJSONStreamInfo(json &rJsonContent, EFPStreamContent &rStreamContent);
-  ElasticFrameMessages generateStreamInfoFromJSON(EFPStreamContent &rStreamContent, json &rJsonContent);
-  ElasticFrameMessages generateAllStreamInfoJSON(json &rJsonContent);
-  ElasticFrameMessages generateAllStreamInfoData(std::unique_ptr<std::vector<uint8_t>> &rStreamContentData);
+  ElasticFrameMessages generateJSONStreamInfoFromData(json &rJsonContent, EFPStreamContent &rStreamContent);
+  ElasticFrameMessages generateDataStreamInfoFromJSON(EFPStreamContent &rStreamContent, json &rJsonContent);
+  ElasticFrameMessages generateAllStreamInfoJSON(json &rJsonContent, bool deltasOnly);
+  ElasticFrameMessages generateAllStreamInfoData(std::unique_ptr<std::vector<uint8_t>> &rStreamContentData, bool deltasOnly);
+  ElasticFrameMessages sendEmbeddedData(bool deltasOnly);
   uint32_t signalVersion();
 
   std::function<bool(EFPStreamContent& content)> declareContentCallback = nullptr;
@@ -187,7 +188,6 @@ protected:
 private:
   void startSignalWorker();
   void signalWorker();
-  void sendEmbeddedData();
   ElasticFrameMessages signalFilter(ElasticFrameContent dataContent, uint8_t streamID, uint32_t *dataMessage);
 
   bool mChangeDetected = false;

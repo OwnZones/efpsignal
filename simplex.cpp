@@ -13,13 +13,14 @@ void contentDeclaration(std::unique_ptr<std::vector<uint8_t>> &rStreamContentDat
   std::unique_ptr<EFPSignalReceive::EFPSignalReceiveData> lMyData = std::make_unique<EFPSignalReceive::EFPSignalReceiveData>();
   ElasticFrameMessages lStatus;
   if (rStreamContentData) {
-    std::cout << "Got OOB DATA" << std::endl;
+
 
     //Send the data to a reciever uint8_t* ->rStreamContentData->data() size -> rStreamContentData->size()
     //send send send....
     //ok here we are at the receiver ->
 
     lStatus = myEFPSignalReceive.getStreamInformationData(rStreamContentData->data(), rStreamContentData->size(), lMyData);
+    std::cout << "Got OOB DATA elements -> " << unsigned(lMyData->mContentList.size()) << std::endl;
     if (lStatus != ElasticFrameMessages::noError) {
       std::cout << "Faled parsing data DATA" << std::endl;
       testFail = true;
@@ -85,7 +86,7 @@ bool declareContent(EFPStreamContent& content) {
 
 //Check if we got that info in the receiver.
 void gotContentInformation(std::unique_ptr<EFPSignalReceive::EFPSignalReceiveData>& rData) {
-  std::cout << "Declare content reciever callback" << std::endl;
+  std::cout << "Declare content reciever callback. Items number -> " << unsigned(rData->mContentList.size()) << std::endl;
   for (auto &rItem: rData->mContentList) {
     if (rItem.mVariables.mGStreamID == 30 && rItem.mVariables.mVWidth != 1920 && rItem.mVariables.mVHeight != 1080) {
       std::cout << "Content not as expected" << std::endl;
@@ -115,6 +116,7 @@ int main() {
   myEFPSignalSend.mEmbedInStream = false;
   myEFPSignalSend.mBinaryMode = false;
   myEFPSignalSend.mTriggerChanges = false;
+  myEFPSignalSend.mEmbedDeltas = false;
 
   ElasticFrameMessages status;
 
@@ -185,7 +187,7 @@ int main() {
   std::cout << "BOOM" << std::endl;
   std::this_thread::sleep_for(std::chrono::seconds(1));
   json myStreamInfo;
-  status = myEFPSignalSend.generateAllStreamInfoJSON(myStreamInfo);
+  status = myEFPSignalSend.generateAllStreamInfoJSON(myStreamInfo, false);
   if (status != ElasticFrameMessages::noError) {
     std::cout << "myEFPSignalSend.generateAllStreamInfoJSON fail" << std::endl;
     return EXIT_FAILURE;
@@ -250,7 +252,7 @@ int main() {
 
   std::this_thread::sleep_for(std::chrono::seconds(2));
 
-  status = myEFPSignalSend.generateAllStreamInfoJSON(myStreamInfo);
+  status = myEFPSignalSend.generateAllStreamInfoJSON(myStreamInfo, false);
   if (status != ElasticFrameMessages::noError) {
     std::cout << "myEFPSignalSend.generateAllStreamInfoJSON2 fail" << std::endl;
     return EXIT_FAILURE;
