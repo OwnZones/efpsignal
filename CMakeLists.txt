@@ -3,18 +3,12 @@ project(efpsignal)
 
 set(CMAKE_CXX_STANDARD 14)
 
+find_package (Threads REQUIRED)
+
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 
-variable_watch(CMAKE_BUILD_TYPE)
-
-#If no build type is set then force Release
-IF( NOT CMAKE_BUILD_TYPE )
-    set(CMAKE_BUILD_TYPE "Release" CACHE STRING
-            "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
-            FORCE)
-ENDIF()
-
 #Include EFP
+##[[
 include(ExternalProject)
 ExternalProject_Add(project_efp
         GIT_REPOSITORY https://bitbucket.org/unitxtra/efp.git
@@ -30,15 +24,22 @@ ExternalProject_Add(project_efp
 add_library(efp STATIC IMPORTED)
 set_property(TARGET efp PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/efp/libefp.a)
 add_dependencies(efp project_efp)
+#]]
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/efp/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/json/)
 
+#[[
+file(GLOB base "${CMAKE_CURRENT_SOURCE_DIR}/efp/ElasticFrameProtocol.cpp")
+add_library(efp STATIC ${base})
+target_link_libraries(efp Threads::Threads)
+]]
+
 add_library(efpsignal STATIC efpsignal.cpp)
-target_link_libraries(efpsignal efp)
+target_link_libraries(efpsignal efp Threads::Threads)
 
 add_executable(efpsignalsimplextests simplex.cpp)
-target_link_libraries(efpsignalsimplextests efpsignal)
+target_link_libraries(efpsignalsimplextests efpsignal Threads::Threads)
 
 add_executable(efpsignalduplextests duplex.cpp)
-target_link_libraries(efpsignalduplextests efpsignal)
+target_link_libraries(efpsignalduplextests efpsignal Threads::Threads )

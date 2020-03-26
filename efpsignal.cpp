@@ -5,41 +5,42 @@
 #include "efpsignal.h"
 #include "efpsignalinternal.h"
 
+//Fixme
 //Global
 void EFPSignalExtraktValuesForKeyV1(EFPStreamContent &newContent, json &element, json &jError, bool &jsonOK) {
   //General part
   newContent.mVariables.mGDescription =
-      getContentForKey<std::string>("gdescription_str", element, jError, jsonOK);
+      EFPGetContentForKey<std::string>("gdescription_str", element, jError, jsonOK);
   newContent.mVariables.mGFrameContent =
-      getContentForKey<ElasticFrameContent>("gframecontent_u8", element, jError, jsonOK);
-  newContent.mVariables.mGStreamID = getContentForKey<uint8_t>("gstreamid_u8", element, jError, jsonOK);
-  newContent.mVariables.mGChanged = getContentForKey<uint8_t>("gchanged_u8", element, jError, jsonOK);
+      EFPGetContentForKey<ElasticFrameContent>("gframecontent_u8", element, jError, jsonOK);
+  newContent.mVariables.mGStreamID = EFPGetContentForKey<uint8_t>("gstreamid_u8", element, jError, jsonOK);
+  newContent.mVariables.mGChanged = EFPGetContentForKey<uint8_t>("gchanged_u8", element, jError, jsonOK);
   newContent.mVariables.mGProtectionGroupID =
-      getContentForKey<uint8_t>("gprotectiongroup_u8", element, jError, jsonOK);
-  newContent.mVariables.mGSyncGroupID = getContentForKey<uint8_t>("gsyncgroup_u8", element, jError, jsonOK);
-  newContent.mVariables.mGPriority = getContentForKey<uint8_t>("gpriority_u8", element, jError, jsonOK);
-  newContent.mVariables.mGNotifyHere = getContentForKey<uint64_t>("gnotifyhere_u64", element, jError, jsonOK);
+      EFPGetContentForKey<uint8_t>("gprotectiongroup_u8", element, jError, jsonOK);
+  newContent.mVariables.mGSyncGroupID = EFPGetContentForKey<uint8_t>("gsyncgroup_u8", element, jError, jsonOK);
+  newContent.mVariables.mGPriority = EFPGetContentForKey<uint8_t>("gpriority_u8", element, jError, jsonOK);
+  newContent.mVariables.mGNotifyHere = EFPGetContentForKey<uint64_t>("gnotifyhere_u64", element, jError, jsonOK);
 
   //Video part
-  newContent.mVariables.mVFrameRateNum = getContentForKey<uint32_t>("vratenum_u32", element, jError, jsonOK);
-  newContent.mVariables.mVFrameRateDen = getContentForKey<uint32_t>("vrateden_u32", element, jError, jsonOK);
-  newContent.mVariables.mVWidth = getContentForKey<uint32_t>("vwidth_u32", element, jError, jsonOK);
-  newContent.mVariables.mVHeight = getContentForKey<uint32_t>("vheight_u32", element, jError, jsonOK);
-  newContent.mVariables.mVBitsPerSec = getContentForKey<uint32_t>("vbps_u32", element, jError, jsonOK);
+  newContent.mVariables.mVFrameRateNum = EFPGetContentForKey<uint32_t>("vratenum_u32", element, jError, jsonOK);
+  newContent.mVariables.mVFrameRateDen = EFPGetContentForKey<uint32_t>("vrateden_u32", element, jError, jsonOK);
+  newContent.mVariables.mVWidth = EFPGetContentForKey<uint32_t>("vwidth_u32", element, jError, jsonOK);
+  newContent.mVariables.mVHeight = EFPGetContentForKey<uint32_t>("vheight_u32", element, jError, jsonOK);
+  newContent.mVariables.mVBitsPerSec = EFPGetContentForKey<uint32_t>("vbps_u32", element, jError, jsonOK);
 
   //Audio part
-  newContent.mVariables.mAFreq = getContentForKey<uint32_t>("afreq_u32", element, jError, jsonOK);
-  newContent.mVariables.mANoChannels = getContentForKey<uint32_t>("anoch_u32", element, jError, jsonOK);
-  newContent.mVariables.mAChannelMapping = getContentForKey<uint32_t>("achmap_u32", element, jError, jsonOK);
+  newContent.mVariables.mAFreq = EFPGetContentForKey<uint32_t>("afreq_u32", element, jError, jsonOK);
+  newContent.mVariables.mANoChannels = EFPGetContentForKey<uint32_t>("anoch_u32", element, jError, jsonOK);
+  newContent.mVariables.mAChannelMapping = EFPGetContentForKey<uint32_t>("achmap_u32", element, jError, jsonOK);
 
   //Text part
-  newContent.mVariables.mTLanguage = getContentForKey<std::string>("tlang_str", element, jError, jsonOK);
-  newContent.mVariables.mTextConfig = getContentForKey<std::string>("ttextconfig_str", element, jError, jsonOK);
+  newContent.mVariables.mTLanguage = EFPGetContentForKey<std::string>("tlang_str", element, jError, jsonOK);
+  newContent.mVariables.mTextConfig = EFPGetContentForKey<std::string>("ttextconfig_str", element, jError, jsonOK);
 
   //auX part
-  newContent.mVariables.mXType = getContentForKey<uint32_t>("xtype_u32", element, jError, jsonOK);
-  newContent.mVariables.mXString = getContentForKey<std::string>("xstr_str", element, jError, jsonOK);
-  newContent.mVariables.mXValue = getContentForKey<uint32_t>("xval_u32", element, jError, jsonOK);
+  newContent.mVariables.mXType = EFPGetContentForKey<uint32_t>("xtype_u32", element, jError, jsonOK);
+  newContent.mVariables.mXString = EFPGetContentForKey<std::string>("xstr_str", element, jError, jsonOK);
+  newContent.mVariables.mXValue = EFPGetContentForKey<uint32_t>("xval_u32", element, jError, jsonOK);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -54,7 +55,7 @@ EFPSignalSend::EFPSignalSend(uint16_t setMTU, uint32_t garbageCollectms) : Elast
   mEFPStreamLists.reserve(256);
   mGarbageCollectms = garbageCollectms;
   startSignalWorker();
-  LOGGER(true, LOGG_NOTIFY, "EFPSignal construct")
+  LOGGER(true, LOGG_NOTIFY, "EFPSignalSend construct")
 }
 
 EFPSignalSend::~EFPSignalSend() {
@@ -69,7 +70,7 @@ EFPSignalSend::~EFPSignalSend() {
       break;
     }
   }
-  LOGGER(true, LOGG_NOTIFY, "EFPSignal destruct")
+  LOGGER(true, LOGG_NOTIFY, "EFPSignalSend destruct")
 }
 
 ElasticFrameMessages EFPSignalSend::signalFilter(ElasticFrameContent dataContent, uint8_t streamID, uint32_t *dataMessage) {
@@ -122,13 +123,15 @@ EFPSignalSend::packAndSend(const std::vector<uint8_t> &rPacket,
                            uint8_t streamID,
                            uint8_t flags) {
 
-  uint32_t lSignalFilterDataMessage = 0;
-  ElasticFrameMessages lSignalMsg = signalFilter(frameContent, streamID, &lSignalFilterDataMessage);
-  if (lSignalFilterDataMessage == 1) {
+  if (frameContent != ElasticFrameContent::efpsig) {
+    uint32_t lSignalFilterDataMessage = 0;
+    ElasticFrameMessages lSignalMsg = signalFilter(frameContent, streamID, &lSignalFilterDataMessage);
+    if (lSignalFilterDataMessage == 1) {
 
-  }
-  if (lSignalMsg != ElasticFrameMessages::noError) {
-    return lSignalMsg;
+    }
+    if (lSignalMsg != ElasticFrameMessages::noError) {
+      return lSignalMsg;
+    }
   }
   return ElasticFrameProtocolSender::packAndSend(rPacket, frameContent, pts, dts, code, streamID, flags);
 }
@@ -142,14 +145,16 @@ EFPSignalSend::packAndSendFromPtr(const uint8_t *pPacket,
                                   uint32_t code,
                                   uint8_t streamID,
                                   uint8_t flags) {
-  uint32_t lSignalFilterDataMessage = 0;
-  ElasticFrameMessages lSignalMsg = signalFilter(frameContent, streamID, &lSignalFilterDataMessage);
-  if (lSignalFilterDataMessage == 1) {
+  if (frameContent != ElasticFrameContent::efpsig) {
+    uint32_t lSignalFilterDataMessage = 0;
+    ElasticFrameMessages lSignalMsg = signalFilter(frameContent, streamID, &lSignalFilterDataMessage);
+    if (lSignalFilterDataMessage == 1) {
 
-  }
+    }
 
-  if (lSignalMsg != ElasticFrameMessages::noError) {
-    return lSignalMsg;
+    if (lSignalMsg != ElasticFrameMessages::noError) {
+      return lSignalMsg;
+    }
   }
   return ElasticFrameProtocolSender::packAndSendFromPtr(pPacket,
                                                         packetSize,
@@ -517,10 +522,10 @@ ElasticFrameMessages EFPSignalReceive::getStreamInformationJSON(uint8_t *data,
     return ElasticFrameMessages::dataNotJSON;
   }
 
-  rParsedData->mSignalVersion = getContentForKey<uint32_t>("efpsignalversion_u32", lJson, lJError, lJsonOK);
+  rParsedData->mSignalVersion = EFPGetContentForKey<uint32_t>("efpsignalversion_u32", lJson, lJError, lJsonOK);
   if (!lJsonOK)
     return ElasticFrameMessages::noDataForKey;
-  rParsedData->mStreamVersion = getContentForKey<uint32_t>("efpstreamversion_u32", lJson, lJError, lJsonOK);
+  rParsedData->mStreamVersion = EFPGetContentForKey<uint32_t>("efpstreamversion_u32", lJson, lJError, lJsonOK);
   if (!lJsonOK)
     return ElasticFrameMessages::noDataForKey;
   //auto streams = getContentForKey<std::string>("efpstreams_arr", j, jError, jsonOK);
@@ -573,6 +578,41 @@ ElasticFrameMessages EFPSignalReceive::getStreamInformationData(uint8_t *data,
   return ElasticFrameMessages::noError;
 }
 
+ElasticFrameMessages EFPSignalReceive::actOnDMSG(uint8_t *data,
+                                                 size_t size) {
+
+  if (size < 2) {
+    LOGGER(true, LOGG_ERROR, "The size of DMSG is less than 2 bytes")
+    return ElasticFrameMessages::efpSignalDropped; //Fixme
+  }
+  std::shared_ptr<EFPSignalSend> efpSndCpy = mEFPSend;
+  //We got a DMSG message. To act on it we need to have a reference to a sender.
+  if (!efpSndCpy) {
+    LOGGER(true, LOGG_ERROR, "No reference to sender exists")
+    return ElasticFrameMessages::efpSignalDropped; //Fixme
+  }
+
+  uint8_t dmsgID = data[0];
+  if (dmsgID == 1) {
+    if (size < sizeof(EFPSignalMessages::WhiteList)) return ElasticFrameMessages::efpSignalDropped; //Fixme
+    EFPSignalMessages::WhiteList lWhiteListDMSG = *(EFPSignalMessages::WhiteList *)data;
+    efpSndCpy->modifyContent(lWhiteListDMSG.mContent, lWhiteListDMSG.mStreamID, [](EFPStreamContent &theContent)
+                                  {
+                                    theContent.mWhiteListed = true;
+                                  }
+    );
+  } else if (dmsgID == 2) {
+    if (size < sizeof(EFPSignalMessages::BlackList)) return ElasticFrameMessages::efpSignalDropped; //Fixme
+    EFPSignalMessages::BlackList lBlackListDMSG = *(EFPSignalMessages::BlackList *)data;
+    efpSndCpy->modifyContent(lBlackListDMSG.mContent, lBlackListDMSG.mStreamID, [](EFPStreamContent &theContent)
+                             {
+                               theContent.mWhiteListed = false;
+                             }
+    );
+  }
+  return ElasticFrameMessages::noError;
+}
+
 void EFPSignalReceive::gotData(ElasticFrameProtocolReceiver::pFramePtr &packet) {
   if (packet->mDataContent == ElasticFrameContent::efpsig) {
     if (this->contentInformationCallback) {
@@ -589,6 +629,9 @@ void EFPSignalReceive::gotData(ElasticFrameProtocolReceiver::pFramePtr &packet) 
           LOGGER(true, LOGG_ERROR, "ERROR parsing EFPStreamContent DATA")
           return;
         }
+      } else if (packet->mCode == EFP_CODE('D', 'M', 'S', 'G')) {
+        ElasticFrameMessages lStatus = actOnDMSG(packet->pFrameData, packet->mFrameSize);
+        return;
       } else {
         LOGGER(true, LOGG_ERROR, "Unknown EFPStreamContent")
         return;
@@ -599,9 +642,9 @@ void EFPSignalReceive::gotData(ElasticFrameProtocolReceiver::pFramePtr &packet) 
       LOGGER(true, LOGG_ERROR, "contentInformationCallback not defined")
       return;
     }
-    if (this->receiveCallback) {
-      this->receiveCallback(packet);
-    }
+  }
+  if (this->receiveCallback) {
+    this->receiveCallback(packet);
   }
 }
 
