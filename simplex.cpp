@@ -184,7 +184,6 @@ int main() {
     std::cout << "myEFPSignalSend.addContent fail" << std::endl;
     return EXIT_FAILURE;
   }
-  std::cout << "BOOM" << std::endl;
   std::this_thread::sleep_for(std::chrono::seconds(1));
   json myStreamInfo;
   status = myEFPSignalSend.generateAllStreamInfoJSON(myStreamInfo, false);

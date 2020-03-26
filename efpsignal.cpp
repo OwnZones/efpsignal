@@ -5,9 +5,8 @@
 #include "efpsignal.h"
 #include "efpsignalinternal.h"
 
-//Fixme
 //Global
-void EFPSignalExtraktValuesForKeyV1(EFPStreamContent &newContent, json &element, json &jError, bool &jsonOK) {
+static void EFPSignalExtraktValuesForKeyV1(EFPStreamContent &newContent, json &element, json &jError, bool &jsonOK) {
   //General part
   newContent.mVariables.mGDescription =
       EFPGetContentForKey<std::string>("gdescription_str", element, jError, jsonOK);
@@ -20,6 +19,7 @@ void EFPSignalExtraktValuesForKeyV1(EFPStreamContent &newContent, json &element,
   newContent.mVariables.mGSyncGroupID = EFPGetContentForKey<uint8_t>("gsyncgroup_u8", element, jError, jsonOK);
   newContent.mVariables.mGPriority = EFPGetContentForKey<uint8_t>("gpriority_u8", element, jError, jsonOK);
   newContent.mVariables.mGNotifyHere = EFPGetContentForKey<uint64_t>("gnotifyhere_u64", element, jError, jsonOK);
+  newContent.mVariables.mGPTSDTSBase = EFPGetContentForKey<uint32_t>("mgptsdtsbase_u32", element, jError, jsonOK);
 
   //Video part
   newContent.mVariables.mVFrameRateNum = EFPGetContentForKey<uint32_t>("vratenum_u32", element, jError, jsonOK);
@@ -284,6 +284,7 @@ ElasticFrameMessages EFPSignalSend::generateJSONStreamInfoFromData(json &rJsonCo
   rJsonContent["gsyncgroup_u8"] = rStreamContent.mVariables.mGSyncGroupID;
   rJsonContent["gpriority_u8"] = rStreamContent.mVariables.mGPriority;
   rJsonContent["gnotifyhere_u64"] = rStreamContent.mVariables.mGNotifyHere;
+  rJsonContent["mgptsdtsbase_u32"] = rStreamContent.mVariables.mGPTSDTSBase;
 
   //Video part
   rJsonContent["vratenum_u32"] = rStreamContent.mVariables.mVFrameRateNum;
@@ -555,12 +556,12 @@ ElasticFrameMessages EFPSignalReceive::getStreamInformationData(uint8_t *data,
                                                                 std::unique_ptr<EFPSignalReceiveData> &parsedData) {
 
   if (size < sizeof(EFPStreamContent::BinaryHeaderV1)) {
-    return ElasticFrameMessages::noDataForKey; //Fixme
+    return ElasticFrameMessages::lessDataThanExpected;
   }
 
   EFPStreamContent::BinaryHeaderV1 lHeaderV1 = *(EFPStreamContent::BinaryHeaderV1 *) data;
   if (lHeaderV1.mEFPSignalversion > EFP_SIGNAL_VERSION) {
-    return ElasticFrameMessages::noDataForKey; //Fixme
+    return ElasticFrameMessages::tooHighversion;
   }
   if (lHeaderV1.mHeaderVersion == 1) {
     parsedData->mSignalVersion = lHeaderV1.mEFPSignalversion;
@@ -573,7 +574,7 @@ ElasticFrameMessages EFPSignalReceive::getStreamInformationData(uint8_t *data,
       parsedData->mContentList.push_back(newContent);
     }
   } else {
-    return ElasticFrameMessages::noDataForKey; //Fixme
+    return ElasticFrameMessages::versionNotSupported;
   }
   return ElasticFrameMessages::noError;
 }
@@ -583,28 +584,28 @@ ElasticFrameMessages EFPSignalReceive::actOnDMSG(uint8_t *data,
 
   if (size < 2) {
     LOGGER(true, LOGG_ERROR, "The size of DMSG is less than 2 bytes")
-    return ElasticFrameMessages::efpSignalDropped; //Fixme
+    return ElasticFrameMessages::lessDataThanExpected;
   }
   std::shared_ptr<EFPSignalSend> efpSndCpy = mEFPSend;
   //We got a DMSG message. To act on it we need to have a reference to a sender.
   if (!efpSndCpy) {
     LOGGER(true, LOGG_ERROR, "No reference to sender exists")
-    return ElasticFrameMessages::efpSignalDropped; //Fixme
+    return ElasticFrameMessages::dmsgSourceMissing;
   }
 
   uint8_t dmsgID = data[0];
   if (dmsgID == 1) {
-    if (size < sizeof(EFPSignalMessages::WhiteList)) return ElasticFrameMessages::efpSignalDropped; //Fixme
+    if (size < sizeof(EFPSignalMessages::WhiteList)) return ElasticFrameMessages::lessDataThanExpected;
     EFPSignalMessages::WhiteList lWhiteListDMSG = *(EFPSignalMessages::WhiteList *)data;
-    efpSndCpy->modifyContent(lWhiteListDMSG.mContent, lWhiteListDMSG.mStreamID, [](EFPStreamContent &theContent)
+    efpSndCpy->modifyContent(lWhiteListDMSG.hContent, lWhiteListDMSG.hStreamID, [](EFPStreamContent &theContent)
                                   {
                                     theContent.mWhiteListed = true;
                                   }
     );
   } else if (dmsgID == 2) {
-    if (size < sizeof(EFPSignalMessages::BlackList)) return ElasticFrameMessages::efpSignalDropped; //Fixme
+    if (size < sizeof(EFPSignalMessages::BlackList)) return ElasticFrameMessages::lessDataThanExpected;
     EFPSignalMessages::BlackList lBlackListDMSG = *(EFPSignalMessages::BlackList *)data;
-    efpSndCpy->modifyContent(lBlackListDMSG.mContent, lBlackListDMSG.mStreamID, [](EFPStreamContent &theContent)
+    efpSndCpy->modifyContent(lBlackListDMSG.hContent, lBlackListDMSG.hStreamID, [](EFPStreamContent &theContent)
                              {
                                theContent.mWhiteListed = false;
                              }

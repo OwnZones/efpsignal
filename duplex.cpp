@@ -66,6 +66,10 @@ void gotDataGen(ElasticFrameProtocolReceiver::pFramePtr &packet) {
   std::cout << "G" << std::endl;
 }
 
+void gotContentInformationGen(std::unique_ptr<EFPSignalReceive::EFPSignalReceiveData>& rData) {
+  std::cout << "H" << std::endl;
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 //
 //
@@ -85,8 +89,8 @@ void gotContentInformationRcv(std::unique_ptr<EFPSignalReceive::EFPSignalReceive
     for (auto &rItem: rData->mContentList) {
       if (rItem.mVariables.mGFrameContent == ElasticFrameContent::h264 && rItem.mVariables.mGStreamID == 31) {
         EFPSignalMessages::WhiteList myWhiteListItem;
-        myWhiteListItem.mStreamID = rItem.mVariables.mGStreamID;
-        myWhiteListItem.mContent = rItem.mVariables.mGFrameContent;
+        myWhiteListItem.hStreamID = rItem.mVariables.mGStreamID;
+        myWhiteListItem.hContent = rItem.mVariables.mGFrameContent;
         myEFPDuplexReceiver.mEFPSend->packAndSendFromPtr((uint8_t *) &myWhiteListItem,
                                                          sizeof(EFPSignalMessages::WhiteList),
                                                          ElasticFrameContent::efpsig,
@@ -126,14 +130,15 @@ int main() {
   myEFPDuplexGenerator.mEFPSend -> declareContentCallback = std::bind(&declareContentGen, std::placeholders::_1);
   myEFPDuplexGenerator.mEFPSend -> sendCallback = std::bind(&sendDataGen, std::placeholders::_1, std::placeholders::_2);
   myEFPDuplexGenerator.mEFPReceive -> receiveCallback = std::bind(&gotDataGen, std::placeholders::_1);
+  myEFPDuplexGenerator.mEFPReceive -> contentInformationCallback = std::bind(&gotContentInformationGen, std::placeholders::_1);
 
   //Declare callbacks receiver
   myEFPDuplexReceiver.mEFPSend->declareContentCallback = std::bind(&declareContentRcv, std::placeholders::_1);
   myEFPDuplexReceiver.mEFPSend->sendCallback = std::bind(&sendDataRcv, std::placeholders::_1, std::placeholders::_2);
-  myEFPDuplexReceiver.mEFPSend->mAutoRegister = false;
   myEFPDuplexReceiver.mEFPReceive->receiveCallback = std::bind(&gotDataRcv, std::placeholders::_1);
   myEFPDuplexReceiver.mEFPReceive->contentInformationCallback = std::bind(&gotContentInformationRcv, std::placeholders::_1);
 
+  myEFPDuplexReceiver.mEFPSend->mAutoRegister = false;
   myEFPDuplexReceiver.mEFPSend->mEmbedInStream = false;
 
   runThreads = true;
