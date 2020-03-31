@@ -147,7 +147,10 @@ public:
     ElasticFrameContent mGFrameContent = ElasticFrameContent::unknown;
     /// ElasticFrameProtocols EFP_ID meaning the streamID associated with this content
     uint8_t mGStreamID = 0;
-    /// If the value is 1 the content has been changed or added. This variable is maintained by EFPSend
+    /// 0 = Same information as last time
+    /// 1 = item added
+    /// 2 = item changed
+    /// 3 = item deleted
     /// Setting this parameter to anything will be overridden by EFPSignal
     uint8_t mGChanged = 0;
     /// If this content is part of a protection group the protection group ID is noted else 0

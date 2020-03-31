@@ -39,8 +39,10 @@ void contentDeclaration(std::unique_ptr<std::vector<uint8_t>> &rStreamContentDat
     try {
       for (auto &rItem: rJsonContent["efpstreams_arr"]) {
         uint8_t changed = rItem["gchanged_u8"];
+        uint8_t streamID = rItem["gstreamid_u8"];
+
         if (firstRun) {
-          if (changed != 1) {
+          if (changed != 2 && streamID == 30) {
             std::cout << "changed1 error" << std::endl;
             testFail = true;
           }

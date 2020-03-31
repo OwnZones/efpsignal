@@ -211,8 +211,11 @@ ElasticFrameMessages EFPSignalSend::deleteContent(ElasticFrameContent frameConte
 
   int lItemIndex = 0;
   std::vector<EFPStreamContent> *lStreamContent = &mEFPStreamLists[streamID];
+  std::vector<EFPStreamContent> lDeletedItems;
   for (auto &rItem: *lStreamContent) {
     if (rItem.mVariables.mGFrameContent == frameContent) {
+      lDeletedItems.push_back(rItem);
+      rItem.mVariables.mGChanged = 3;
       lStreamContent->erase(lStreamContent->begin() + lItemIndex);
       LOGGER(true, LOGG_NOTIFY, "Deleted entry")
       mIsKnown[streamID][frameContent] = false;
@@ -224,6 +227,9 @@ ElasticFrameMessages EFPSignalSend::deleteContent(ElasticFrameContent frameConte
   if (mIsKnown[streamID][frameContent]) {
     return ElasticFrameMessages::deleteContentFail;
   }
+
+  //Fixme. deal with deleted items.
+
   return ElasticFrameMessages::noError;
 }
 
@@ -241,7 +247,7 @@ ElasticFrameMessages EFPSignalSend::modifyContent(ElasticFrameContent frameConte
   for (auto &rItem: *lStreamContent) {
     if (rItem.mVariables.mGFrameContent == frameContent) {
       function(rItem);
-      rItem.mVariables.mGChanged= 1;
+      rItem.mVariables.mGChanged= 2;
       lFound = true;
       break;
     }
@@ -321,7 +327,7 @@ ElasticFrameMessages EFPSignalSend::generateAllStreamInfoJSON(json &rJsonContent
     std::vector<EFPStreamContent> *lStreamContent = &mEFPStreamLists[x];
     if (lStreamContent->size()) {
       for (auto &rItem: *lStreamContent) {
-        if ((deltasOnly && rItem.mVariables.mGChanged == 1) || !deltasOnly) {
+        if ((deltasOnly && rItem.mVariables.mGChanged) || !deltasOnly) {
           json jsonStream;
           ElasticFrameMessages status = generateJSONStreamInfoFromData(jsonStream, rItem);
           rItem.mVariables.mGChanged = 0;
@@ -358,7 +364,7 @@ ElasticFrameMessages EFPSignalSend::generateAllStreamInfoData(std::unique_ptr<st
     std::vector<EFPStreamContent> *streamContent = &mEFPStreamLists[x];
     if (streamContent->size()) {
       for (auto &rItem: *streamContent) {
-        if ((deltasOnly && rItem.mVariables.mGChanged == 1) || !deltasOnly) {
+        if ((deltasOnly && rItem.mVariables.mGChanged) || !deltasOnly) {
           lTotalBlocks++;
         }
       }
@@ -379,7 +385,7 @@ ElasticFrameMessages EFPSignalSend::generateAllStreamInfoData(std::unique_ptr<st
     std::vector<EFPStreamContent> *streamContent = &mEFPStreamLists[x];
     if (streamContent->size()) {
       for (auto &rItem: *streamContent) {
-        if ((deltasOnly && rItem.mVariables.mGChanged == 1) || !deltasOnly) {
+        if ((deltasOnly && rItem.mVariables.mGChanged) || !deltasOnly) {
           std::memmove(lAllDataPtr, &rItem.mVariables, sizeof(EFPStreamContent::Variables));
           rItem.mVariables.mGChanged = 0;
           lAllDataPtr += sizeof(EFPStreamContent::Variables);
