@@ -108,9 +108,9 @@ public:
   }
 
   ///Destructor
-  virtual ~EFPStreamContent(){
+ // virtual ~EFPStreamContent(){
 
-  };
+ // };
 
   /**
    * is the content still allive or has time passed
@@ -141,8 +141,6 @@ public:
   struct Variables {
     //General part
 
-    /// Friendly string description of what this content is
-    std::string mGDescription = "";
     /// ElasticFrameContent as described in ElasticFrameProtocol
     ElasticFrameContent mGFrameContent = ElasticFrameContent::unknown;
     /// ElasticFrameProtocols EFP_ID meaning the streamID associated with this content
@@ -194,16 +192,18 @@ public:
     uint32_t mABitsPerSec = 0;
 
     //Text part
-    /// Language as defined in ISO 639-1
-    std::string mTLanguage = "";
+    /// The name is a combination of an ISO 639 two-letter lowercase culture code associated with
+    /// a language and an ISO 3166 two-letter uppercase subculture code associated with a country or region.
+    // "xx-XX"
+    char mTLanguage[6]="";
     /// Text configuration
-    std::string mTextConfig = "";
+    char mTextConfig[10]="";
 
     //auX part
     /// Free to use aux type
     uint32_t mXType = 0;
     /// Free to use aux string
-    std::string mXString = "";
+    char mXString[10] = "";
     /// Free to use aux value
     uint32_t mXValue = 0;
   } mVariables;

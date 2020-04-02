@@ -157,7 +157,7 @@ ExternalProject_Add(project_efpsignal
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/efpsignal
         BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/efpsignal
         GIT_PROGRESS 1
-        BUILD_COMMAND cmake --build ${CMAKE_CURRENT_SOURCE_DIR}/efp --config ${CMAKE_BUILD_TYPE} --target efpsignal
+        BUILD_COMMAND cmake --build ${CMAKE_CURRENT_SOURCE_DIR}/efpsignal --config ${CMAKE_BUILD_TYPE} --target efpsignal
         STEP_TARGETS build
         EXCLUDE_FROM_ALL TRUE
         INSTALL_COMMAND ""
@@ -165,6 +165,9 @@ ExternalProject_Add(project_efpsignal
 add_library(efpsignal STATIC IMPORTED)
 set_property(TARGET efpsignal PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/efpsignal/libefpsignal.a)
 add_dependencies(efpsignal project_efpsignal)
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/efpsignal")
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/efpsignal/efp/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/efpsignal/json/)
 ```
 
 * **Step2**
