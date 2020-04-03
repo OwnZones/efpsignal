@@ -140,7 +140,8 @@ EFPSignalSend::packAndSend(const std::vector<uint8_t> &rPacket,
                            uint64_t dts,
                            uint32_t code,
                            uint8_t streamID,
-                           uint8_t flags) {
+                           uint8_t flags,
+                           std::function<void(const std::vector<uint8_t> &rSubPacket, uint8_t streamID)> sendFunction) {
 
   if (frameContent != ElasticFrameContent::efpsig) {
     uint32_t lSignalFilterDataMessage = 0;
@@ -152,7 +153,7 @@ EFPSignalSend::packAndSend(const std::vector<uint8_t> &rPacket,
       return lSignalMsg;
     }
   }
-  return ElasticFrameProtocolSender::packAndSend(rPacket, frameContent, pts, dts, code, streamID, flags);
+  return ElasticFrameProtocolSender::packAndSend(rPacket, frameContent, pts, dts, code, streamID, flags, sendFunction);
 }
 
 ElasticFrameMessages
@@ -163,7 +164,8 @@ EFPSignalSend::packAndSendFromPtr(const uint8_t *pPacket,
                                   uint64_t dts,
                                   uint32_t code,
                                   uint8_t streamID,
-                                  uint8_t flags) {
+                                  uint8_t flags,
+                                  std::function<void(const std::vector<uint8_t> &rSubPacket, uint8_t streamID)> sendFunction) {
   if (frameContent != ElasticFrameContent::efpsig) {
     uint32_t lSignalFilterDataMessage = 0;
     ElasticFrameMessages lSignalMsg = signalFilter(frameContent, streamID, &lSignalFilterDataMessage);
@@ -182,7 +184,8 @@ EFPSignalSend::packAndSendFromPtr(const uint8_t *pPacket,
                                                         dts,
                                                         code,
                                                         streamID,
-                                                        flags);
+                                                        flags,
+                                                        sendFunction);
 }
 
 ElasticFrameMessages EFPSignalSend::clearAllContent() {
