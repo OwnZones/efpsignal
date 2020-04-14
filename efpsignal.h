@@ -145,7 +145,7 @@ public:
         ElasticFrameContent mGFrameContent = ElasticFrameContent::unknown;
         /// ElasticFrameProtocols EFP_ID meaning the streamID associated with this content
         uint8_t mGStreamID = 0;
-        /// 0 = Same information as last time
+        /// 0 = no change
         /// 1 = item added
         /// 2 = item changed
         /// 3 = item deleted
@@ -154,8 +154,9 @@ public:
         /// If this content is part of a protection group the protection group ID is noted else 0
         /// A protection group may only contain the same data-type
         uint8_t mGProtectionGroupID = 0;
-        /// If this content is part of a sync-group the sync-group group ID is noted else 0
-        uint8_t mGSyncGroupID = 0;
+        /// If this content is part of a group, else 0
+        /// a value 1-15 indicates the content is synced
+        uint8_t mGGroupID = 0;
         /// The priority of the content used in protection groups
         /// If the priority is set same for two content descriptions it's assumed the content comes from the same source
         uint8_t mGPriority = 0;
@@ -192,7 +193,7 @@ public:
         uint32_t mABitsPerSec = 0;
 
         //Text part
-        /// The name is a combination of an ISO 639 two-letter lowercase culture code associated with
+        /// mTLanguage is a combination of an ISO 639 two-letter lowercase culture code associated with
         /// a language and an ISO 3166 two-letter uppercase subculture code associated with a country or region.
         // "xx-XX"
         char mTLanguage[6] = "";

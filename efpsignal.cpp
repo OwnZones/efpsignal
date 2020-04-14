@@ -1,5 +1,5 @@
 //
-// Created by Anders Cedronius on 2020-03-06.
+// UnitX Edgeware AB 2020
 //
 
 #include "efpsignal.h"
@@ -14,7 +14,7 @@ static void EFPSignalExtraktValuesForKeyV1(EFPStreamContent &newContent, json &e
     newContent.mVariables.mGChanged = EFPGetContentForKey<uint8_t>("gchanged_u8", element, jError, jsonOK);
     newContent.mVariables.mGProtectionGroupID =
             EFPGetContentForKey<uint8_t>("gprotectiongroup_u8", element, jError, jsonOK);
-    newContent.mVariables.mGSyncGroupID = EFPGetContentForKey<uint8_t>("gsyncgroup_u8", element, jError, jsonOK);
+    newContent.mVariables.mGGroupID = EFPGetContentForKey<uint8_t>("gsyncgroup_u8", element, jError, jsonOK);
     newContent.mVariables.mGPriority = EFPGetContentForKey<uint8_t>("gpriority_u8", element, jError, jsonOK);
     newContent.mVariables.mGNotifyHere = EFPGetContentForKey<uint64_t>("gnotifyhere_u64", element, jError, jsonOK);
     newContent.mVariables.mGPTSDTSBase = EFPGetContentForKey<uint32_t>("mgptsdtsbase_u32", element, jError, jsonOK);
@@ -101,8 +101,8 @@ EFPSignalSend::signalFilter(ElasticFrameContent dataContent, uint8_t streamID, u
             if (rItem.mVariables.mGFrameContent == dataContent) {
                 rItem.resetTTL();
 
-                if (rItem.mVariables.mGSyncGroupID) {
-                    *dataMessage = 1; //Signal the frame is part of a sync group
+                if (rItem.mVariables.mGGroupID && rItem.mVariables.mGGroupID < 16) {
+                    *dataMessage = 1; //Signal the frame is part of a sync group (FIXME SYNC_GROUP define)
                 }
 
                 if (!rItem.mWhiteListed) {
@@ -312,7 +312,7 @@ EFPSignalSend::generateJSONStreamInfoFromData(json &rJsonContent, EFPStreamConte
     rJsonContent["gstreamid_u8"] = rStreamContent.mVariables.mGStreamID;
     rJsonContent["gchanged_u8"] = rStreamContent.mVariables.mGChanged;
     rJsonContent["gprotectiongroup_u8"] = rStreamContent.mVariables.mGProtectionGroupID;
-    rJsonContent["gsyncgroup_u8"] = rStreamContent.mVariables.mGSyncGroupID;
+    rJsonContent["gsyncgroup_u8"] = rStreamContent.mVariables.mGGroupID;
     rJsonContent["gpriority_u8"] = rStreamContent.mVariables.mGPriority;
     rJsonContent["gnotifyhere_u64"] = rStreamContent.mVariables.mGNotifyHere;
     rJsonContent["mgptsdtsbase_u32"] = rStreamContent.mVariables.mGPTSDTSBase;

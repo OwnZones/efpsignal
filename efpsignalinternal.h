@@ -1,5 +1,5 @@
 //
-// Created by Anders Cedronius on 2020-03-06.
+// UnitX Edgeware AB 2020
 //
 
 #ifndef EFPSIGNAL__EFPSIGNALINTERNAL_H
