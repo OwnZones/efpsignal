@@ -177,6 +177,8 @@ public:
         uint32_t mVHeight = 0;
         /// Number bits per second for the video
         uint32_t mVBitsPerSec = 0;
+        /// Field Count 1 = progressive 2 = interlace
+        uint32_t mVFieldCount = 1;
 
         //Audio part
         /// Audio frequency in Hz

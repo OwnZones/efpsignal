@@ -25,6 +25,7 @@ static void EFPSignalExtraktValuesForKeyV1(EFPStreamContent &newContent, json &e
     newContent.mVariables.mVWidth = EFPGetContentForKey<uint32_t>("vwidth_u32", element, jError, jsonOK);
     newContent.mVariables.mVHeight = EFPGetContentForKey<uint32_t>("vheight_u32", element, jError, jsonOK);
     newContent.mVariables.mVBitsPerSec = EFPGetContentForKey<uint32_t>("vbps_u32", element, jError, jsonOK);
+    newContent.mVariables.mVFieldCount = EFPGetContentForKey<uint32_t>("vfiel_u32", element, jError, jsonOK);
 
     //Audio part
     newContent.mVariables.mAFreq = EFPGetContentForKey<uint32_t>("afreq_u32", element, jError, jsonOK);
@@ -323,6 +324,7 @@ EFPSignalSend::generateJSONStreamInfoFromData(json &rJsonContent, EFPStreamConte
     rJsonContent["vwidth_u32"] = rStreamContent.mVariables.mVWidth;
     rJsonContent["vheight_u32"] = rStreamContent.mVariables.mVHeight;
     rJsonContent["vbps_u32"] = rStreamContent.mVariables.mVBitsPerSec;
+    rJsonContent["vfiel_u32"] = rStreamContent.mVariables.mVFieldCount;
 
     //Audio part
     rJsonContent["afreq_u32"] = rStreamContent.mVariables.mAFreq;
