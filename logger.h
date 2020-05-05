@@ -2,18 +2,22 @@
 // UnitX Edgeware AB 2020
 //
 
-#ifndef EFPSIGNAL__EFPSIGNALINTERNAL_H
-#define EFPSIGNAL__EFPSIGNALINTERNAL_H
+#ifndef LOGGER_H
+#define LOGGER_H
 
-// GLobal Logger -- Start
-#define LOGG_NOTIFY (unsigned)1
-#define LOGG_WARN (unsigned)2
-#define LOGG_ERROR (unsigned)4
-#define LOGG_FATAL (unsigned)8
-#define LOGG_MASK LOGG_NOTIFY | LOGG_WARN | LOGG_ERROR | LOGG_FATAL //What to logg?
+#include <iostream>
+#include <sstream>
+
+#define LOGG_NOTIFY 1
+#define LOGG_WARN 2
+#define LOGG_ERROR 4
+#define LOGG_FATAL 8
+#define LOGG_MASK  LOGG_NOTIFY | LOGG_WARN | LOGG_ERROR | LOGG_FATAL //What to logg?
+
+//#define DEBUG
 
 #ifdef DEBUG
-#define LOGGER(l, g, f) \
+#define EFP_LOGGER(l,g,f) \
 { \
 std::ostringstream a; \
 if (g == (LOGG_NOTIFY & (LOGG_MASK))) {a << "Notification: ";} \
@@ -27,8 +31,7 @@ std::cout << a.str(); \
 } \
 }
 #else
-#define LOGGER(l,g,f)
+#define EFP_LOGGER(l,g,f)
 #endif
-// GLobal Logger -- End
 
-#endif //EFPSIGNAL__EFPSIGNALINTERNAL_H
+#endif

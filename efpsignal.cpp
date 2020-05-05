@@ -3,7 +3,7 @@
 //
 
 #include "efpsignal.h"
-#include "efpsignalinternal.h"
+#include "logger.h"
 
 //Global
 static void EFPSignalExtraktValuesForKeyV1(EFPStreamContent &newContent, json &element, json &jError, bool &jsonOK) {
@@ -75,7 +75,7 @@ EFPSignalSend::EFPSignalSend(uint16_t setMTU, uint32_t garbageCollectms) : Elast
     mEFPStreamLists.resize(256);
     mGarbageCollectms = garbageCollectms;
     startSignalWorker();
-    LOGGER(true, LOGG_NOTIFY, "EFPSignalSend construct")
+    EFP_LOGGER(true, LOGG_NOTIFY, "EFPSignalSend construct")
 }
 
 EFPSignalSend::~EFPSignalSend() {
@@ -86,11 +86,11 @@ EFPSignalSend::~EFPSignalSend() {
         std::this_thread::sleep_for(std::chrono::microseconds(1000));
         if (!--lLockProtect) {
             //we gave it a second now exit anyway
-            LOGGER(true, LOGG_FATAL, "Threads not stopping. Now crash and burn baby!!")
+            EFP_LOGGER(true, LOGG_FATAL, "Threads not stopping. Now crash and burn baby!!")
             break;
         }
     }
-    LOGGER(true, LOGG_NOTIFY, "EFPSignalSend destruct")
+    EFP_LOGGER(true, LOGG_NOTIFY, "EFPSignalSend destruct")
 }
 
 ElasticFrameMessages
@@ -123,7 +123,7 @@ EFPSignalSend::signalFilter(ElasticFrameContent dataContent, uint8_t streamID, u
             lNewContent.mVariables.mGChanged = 1;
             mEFPStreamLists[streamID].push_back(lNewContent);
             mIsKnown[streamID][dataContent] = true;
-            LOGGER(true, LOGG_NOTIFY, "Added entry")
+            EFP_LOGGER(true, LOGG_NOTIFY, "Added entry")
             mEFPStreamListVersion++;
             if (!lNewContent.mWhiteListed) {
                 return ElasticFrameMessages::efpSignalDropped;
@@ -221,7 +221,7 @@ ElasticFrameMessages EFPSignalSend::addContent(EFPStreamContent &rStreamContent)
     mEFPStreamLists[lStreamID].push_back(rStreamContent);
     mIsKnown[lStreamID][lDataContent] = true;
     mEFPStreamListVersion++;
-    LOGGER(true, LOGG_NOTIFY, "Added entry")
+    EFP_LOGGER(true, LOGG_NOTIFY, "Added entry")
     return ElasticFrameMessages::noError;
 }
 
@@ -242,7 +242,7 @@ ElasticFrameMessages EFPSignalSend::deleteContent(ElasticFrameContent frameConte
             lDeletedItems.push_back(rItem);
             rItem.mVariables.mGChanged = 3;
             lStreamContent->erase(lStreamContent->begin() + lItemIndex);
-            LOGGER(true, LOGG_NOTIFY, "Deleted entry")
+            EFP_LOGGER(true, LOGG_NOTIFY, "Deleted entry")
             mIsKnown[streamID][frameContent] = false;
             mEFPStreamListVersion++;
         } else {
@@ -361,7 +361,7 @@ ElasticFrameMessages EFPSignalSend::generateAllStreamInfoJSON(json &rJsonContent
                     if (status == ElasticFrameMessages::noError) {
                         lTempStreams.push_back(jsonStream);
                     } else {
-                        LOGGER(true, LOGG_ERROR, "ERROR generateAllStreamInfoJSON")
+                        EFP_LOGGER(true, LOGG_ERROR, "ERROR generateAllStreamInfoJSON")
                     }
                 }
             }
@@ -381,7 +381,7 @@ EFPSignalSend::generateDataStreamInfoFromJSON(EFPStreamContent &rStreamContent, 
     if (lJsonOK) {
         return ElasticFrameMessages::noError;
     }
-    LOGGER(true, LOGG_ERROR, "ERROR parsing JSON EFPStreamContent")
+    EFP_LOGGER(true, LOGG_ERROR, "ERROR parsing JSON EFPStreamContent")
     return ElasticFrameMessages::dataNotJSON;
 }
 
@@ -487,7 +487,7 @@ void EFPSignalSend::signalWorker() {
                     for (auto &rItem: *lStreamContent) {
                         if (!rItem.isStillAlive(100)) {
                             lStreamContent->erase(lStreamContent->begin() + lItemIndex);
-                            LOGGER(true, LOGG_NOTIFY, "Deleted entry")
+                            EFP_LOGGER(true, LOGG_NOTIFY, "Deleted entry")
                             mEFPStreamListVersion++;
                         } else {
                             lItemIndex++;
@@ -498,7 +498,7 @@ void EFPSignalSend::signalWorker() {
         } //  < Lock wrapper end >
 
         if (mEFPStreamListVersion != mOldEFPStreamListVersion) {
-            LOGGER(true, LOGG_NOTIFY, "ListChanged")
+            EFP_LOGGER(true, LOGG_NOTIFY, "ListChanged")
             mOldEFPStreamListVersion = mEFPStreamListVersion;
             mChangeDetected = true;
         }
@@ -515,7 +515,7 @@ void EFPSignalSend::signalWorker() {
         mEmbedInterval100msStepsFireCounter--;
     }
     mSignalThreadActive = false;
-    LOGGER(true, LOGG_NOTIFY, "signalWorker exit")
+    EFP_LOGGER(true, LOGG_NOTIFY, "signalWorker exit")
 }
 
 void EFPSignalSend::startSignalWorker() {
@@ -534,11 +534,11 @@ void EFPSignalSend::startSignalWorker() {
 EFPSignalReceive::EFPSignalReceive(uint32_t bucketTimeoutMaster, uint32_t holTimeoutMaster)
         : ElasticFrameProtocolReceiver(bucketTimeoutMaster, holTimeoutMaster) {
     ElasticFrameProtocolReceiver::receiveCallback = std::bind(&EFPSignalReceive::gotData, this, std::placeholders::_1);
-    LOGGER(true, LOGG_NOTIFY, "EFPSignalReceive construct")
+    EFP_LOGGER(true, LOGG_NOTIFY, "EFPSignalReceive construct")
 }
 
 EFPSignalReceive::~EFPSignalReceive() {
-    LOGGER(true, LOGG_NOTIFY, "EFPSignalReceive destruct")
+    EFP_LOGGER(true, LOGG_NOTIFY, "EFPSignalReceive destruct")
 }
 
 uint32_t EFPSignalReceive::signalVersion() {
@@ -555,7 +555,7 @@ ElasticFrameMessages EFPSignalReceive::getStreamInformationJSON(uint8_t *data,
     try {
         lJson = json::parse(lContent.c_str());
     } catch (const std::exception &e) {
-        LOGGER(true, LOGG_ERROR, "Error reading json data -> " << e.what())
+        EFP_LOGGER(true, LOGG_ERROR, "Error reading json data -> " << e.what())
         return ElasticFrameMessages::dataNotJSON;
     }
 
@@ -576,12 +576,12 @@ ElasticFrameMessages EFPSignalReceive::getStreamInformationJSON(uint8_t *data,
             if (lJsonOK) {
                 rParsedData->mContentList.push_back(newContent);
             } else {
-                LOGGER(true, LOGG_ERROR, "ERROR parsing EFPStreamContent")
+                EFP_LOGGER(true, LOGG_ERROR, "ERROR parsing EFPStreamContent")
                 lJsonOK = true;
             }
         }
     } catch (const std::exception &e) {
-        LOGGER(true, LOGG_ERROR, "Error reading json data -> " << e.what())
+        EFP_LOGGER(true, LOGG_ERROR, "Error reading json data -> " << e.what())
         return ElasticFrameMessages::noDataForKey;
     }
     return ElasticFrameMessages::noError;
@@ -619,13 +619,13 @@ ElasticFrameMessages EFPSignalReceive::actOnDMSG(uint8_t *data,
                                                  size_t size) {
 
     if (size < 2) {
-        LOGGER(true, LOGG_ERROR, "The size of DMSG is less than 2 bytes")
+        EFP_LOGGER(true, LOGG_ERROR, "The size of DMSG is less than 2 bytes")
         return ElasticFrameMessages::lessDataThanExpected;
     }
     std::shared_ptr<EFPSignalSend> efpSndCpy = mEFPSend;
     //We got a DMSG message. To act on it we need to have a reference to a sender.
     if (!efpSndCpy) {
-        LOGGER(true, LOGG_ERROR, "No reference to sender exists")
+        EFP_LOGGER(true, LOGG_ERROR, "No reference to sender exists")
         return ElasticFrameMessages::dmsgSourceMissing;
     }
 
@@ -656,27 +656,27 @@ void EFPSignalReceive::gotData(ElasticFrameProtocolReceiver::pFramePtr &packet) 
                 ElasticFrameMessages lStatus = getStreamInformationJSON(packet->pFrameData, packet->mFrameSize,
                                                                         lMyData);
                 if (lStatus != ElasticFrameMessages::noError) {
-                    LOGGER(true, LOGG_ERROR, "ERROR parsing EFPStreamContent JSON")
+                    EFP_LOGGER(true, LOGG_ERROR, "ERROR parsing EFPStreamContent JSON")
                     return;
                 }
             } else if (packet->mCode == EFP_CODE('D', 'A', 'T', 'A')) {
                 ElasticFrameMessages lStatus = getStreamInformationData(packet->pFrameData, packet->mFrameSize,
                                                                         lMyData);
                 if (lStatus != ElasticFrameMessages::noError) {
-                    LOGGER(true, LOGG_ERROR, "ERROR parsing EFPStreamContent DATA")
+                    EFP_LOGGER(true, LOGG_ERROR, "ERROR parsing EFPStreamContent DATA")
                     return;
                 }
             } else if (packet->mCode == EFP_CODE('D', 'M', 'S', 'G')) {
                 ElasticFrameMessages lStatus = actOnDMSG(packet->pFrameData, packet->mFrameSize);
                 return;
             } else {
-                LOGGER(true, LOGG_ERROR, "Unknown EFPStreamContent")
+                EFP_LOGGER(true, LOGG_ERROR, "Unknown EFPStreamContent")
                 return;
             }
             this->contentInformationCallback(lMyData);
             return;
         } else {
-            LOGGER(true, LOGG_ERROR, "contentInformationCallback not defined")
+            EFP_LOGGER(true, LOGG_ERROR, "contentInformationCallback not defined")
             return;
         }
     }
