@@ -338,7 +338,7 @@ public:
     packAndSend(const std::vector<uint8_t> &rPacket, ElasticFrameContent frameContent, uint64_t pts, uint64_t dts,
                 uint32_t code,
                 uint8_t streamID, uint8_t flags, std::function<void(const std::vector<uint8_t> &rSubPacket,
-                                                                    uint8_t streamID)> sendFunction = nullptr) override;
+                                                                    uint8_t streamID)> sendFunction = nullptr);
 
     /**
      * packAndSendFromPtr overrides the ElasticFrameProtocolSender virtual method. then it calls ElasticFrameProtocolSender method
@@ -351,7 +351,7 @@ public:
                        uint64_t dts,
                        uint32_t code, uint8_t streamID, uint8_t flags,
                        std::function<void(const std::vector<uint8_t> &rSubPacket,
-                                          uint8_t streamID)> sendFunction = nullptr) override;
+                                          uint8_t streamID)> sendFunction = nullptr);
 
 
     /**
