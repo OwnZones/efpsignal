@@ -1,8 +1,8 @@
-![alt text](https://bitbucket.org/unitxtra/efpsignal/raw/13d6289110e31c11e3b0be67f0a17e57c347c9a3/efpsignal.jpg)
+![alt text](efpsignal.jpg)
 
 # EFPSignal
 
-The EFPSignal is the control plane for [ElasticFrameProtocol](https://bitbucket.org/unitxtra/efp/src/master/).
+The EFPSignal is a control plane used by [ElasticFrameProtocol](https://github.com/Unit-X/efp).
 
 ```
 --------------------------------------------------------- ---     /\
@@ -29,27 +29,31 @@ Please read -> [**EFPSignal**](https://edgeware-my.sharepoint.com/:p:/g/personal
 
 ## Installation
 
-Requires cmake version >= **3.10** and **C++14**
+Requires cmake version >= **3.10** and **C++17**
 
 **Release:**
 
 ```sh
-cmake -DCMAKE_BUILD_TYPE=Release .
-make
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake --build . --config Release
 ```
 
 ***Debug:***
 
 ```sh
-cmake -DCMAKE_BUILD_TYPE=Debug .
-make
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Debug ..
+cmake --build . --config Debug
 ```
 
 Output: 
 
-**libefpsignal.a**
+**(platform specific)efpsignal.(platform specific)** (Linux/MacOS -> libefpsignal.a)
 
-The static EFPSignal library (also containing ElasticFrameProtocol libefp.a) 
+The static EFPSignal library
  
 **efpsignalsimplextests**
 
@@ -64,7 +68,7 @@ See the source code for examples on how to use EFPSignal.
 
 ## Usage
 
-The EFPSignal class subclassing ElasticFrameProtocol. Use EFPSignal just as you would use EFP with the addition of the parapeters and callbacks of EFPSignal as described below.
+The EFPSignal class subclassing ElasticFrameProtocol. Use EFPSignal just as you would use EFP with the addition of the parameters and callbacks of EFPSignal as described below.
 
 **Sender:**
 
@@ -152,7 +156,7 @@ Add this in your CMake file.
 #Include EFPSignal
 include(ExternalProject)
 ExternalProject_Add(project_efpsignal
-        GIT_REPOSITORY https://bitbucket.org/unitxtra/efpsignal.git
+        GIT_REPOSITORY https://github.com/Unit-X/efpsignal.git
         GIT_SUBMODULES ""
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/efpsignal
         BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/efpsignal
