@@ -101,6 +101,35 @@ public:
 class EFPStreamContent {
 public:
 
+    ///JSON KEY defines
+    inline static const std::string gframecontent_u8 = "gframecontent_u8";
+    inline static const std::string gstreamid_u8 = "gstreamid_u8";
+    inline static const std::string gchanged_u8 = "gchanged_u8";
+    inline static const std::string gprotectiongroup_u8 = "gprotectiongroup_u8";
+    inline static const std::string ggroup_u8 = "ggroup_u8";
+    inline static const std::string gpriority_u8 = "gpriority_u8";
+    inline static const std::string gnotifyhere_u64 = "gnotifyhere_u64";
+    inline static const std::string mgptsdtsbase_u32 = "mgptsdtsbase_u32";
+    inline static const std::string vratenum_u32 = "vratenum_u32";
+    inline static const std::string vrateden_u32 = "vrateden_u32";
+    inline static const std::string vwidth_u32 = "vwidth_u32";
+    inline static const std::string vheight_u32 = "vheight_u32";
+    inline static const std::string vbps_u32 = "vbps_u32";
+    inline static const std::string vfiel_u32 = "vfiel_u32";
+    inline static const std::string afreq_u32 = "afreq_u32";
+    inline static const std::string anoch_u32 = "anoch_u32";
+    inline static const std::string achmap_u32 = "achmap_u32";
+    inline static const std::string abps_u32 = "abps_u32";
+    inline static const std::string tlang_str = "tlang_str";
+    inline static const std::string ttextconfig_str = "ttextconfig_str";
+    inline static const std::string xtype_u32 = "xtype_u32";
+    inline static const std::string xstr_str = "xstr_str";
+    inline static const std::string xval_u32 = "xval_u32";
+
+    inline static const std::string efpstreamversion_u32 = "efpstreamversion_u32";
+    inline static const std::string efpsignalversion_u32 = "efpsignalversion_u32";
+    inline static const std::string efpstreams_arr = "efpstreams_arr";
+
     ///Constructor passing ttl for the content from when created in ms
     EFPStreamContent(int32_t ttlms) {
         mTimeToLivems = ttlms;

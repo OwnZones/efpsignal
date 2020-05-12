@@ -9,31 +9,31 @@
 static void EFPSignalExtraktValuesForKeyV1(EFPStreamContent &newContent, json &element, json &jError, bool &jsonOK) {
     //General part
     newContent.mVariables.mGFrameContent =
-            EFPGetContentForKey<ElasticFrameContent>("gframecontent_u8", element, jError, jsonOK);
-    newContent.mVariables.mGStreamID = EFPGetContentForKey<uint8_t>("gstreamid_u8", element, jError, jsonOK);
-    newContent.mVariables.mGChanged = EFPGetContentForKey<uint8_t>("gchanged_u8", element, jError, jsonOK);
+            EFPGetContentForKey<ElasticFrameContent>(EFPStreamContent::gframecontent_u8, element, jError, jsonOK);
+    newContent.mVariables.mGStreamID = EFPGetContentForKey<uint8_t>(EFPStreamContent::gstreamid_u8, element, jError, jsonOK);
+    newContent.mVariables.mGChanged = EFPGetContentForKey<uint8_t>(EFPStreamContent::gchanged_u8, element, jError, jsonOK);
     newContent.mVariables.mGProtectionGroupID =
-            EFPGetContentForKey<uint8_t>("gprotectiongroup_u8", element, jError, jsonOK);
-    newContent.mVariables.mGGroupID = EFPGetContentForKey<uint8_t>("ggroup_u8", element, jError, jsonOK);
-    newContent.mVariables.mGPriority = EFPGetContentForKey<uint8_t>("gpriority_u8", element, jError, jsonOK);
-    newContent.mVariables.mGNotifyHere = EFPGetContentForKey<uint64_t>("gnotifyhere_u64", element, jError, jsonOK);
-    newContent.mVariables.mGPTSDTSBase = EFPGetContentForKey<uint32_t>("mgptsdtsbase_u32", element, jError, jsonOK);
+            EFPGetContentForKey<uint8_t>(EFPStreamContent::gprotectiongroup_u8, element, jError, jsonOK);
+    newContent.mVariables.mGGroupID = EFPGetContentForKey<uint8_t>(EFPStreamContent::ggroup_u8, element, jError, jsonOK);
+    newContent.mVariables.mGPriority = EFPGetContentForKey<uint8_t>(EFPStreamContent::gpriority_u8, element, jError, jsonOK);
+    newContent.mVariables.mGNotifyHere = EFPGetContentForKey<uint64_t>(EFPStreamContent::gnotifyhere_u64, element, jError, jsonOK);
+    newContent.mVariables.mGPTSDTSBase = EFPGetContentForKey<uint32_t>(EFPStreamContent::mgptsdtsbase_u32, element, jError, jsonOK);
 
     //Video part
-    newContent.mVariables.mVFrameRateNum = EFPGetContentForKey<uint32_t>("vratenum_u32", element, jError, jsonOK);
-    newContent.mVariables.mVFrameRateDen = EFPGetContentForKey<uint32_t>("vrateden_u32", element, jError, jsonOK);
-    newContent.mVariables.mVWidth = EFPGetContentForKey<uint32_t>("vwidth_u32", element, jError, jsonOK);
-    newContent.mVariables.mVHeight = EFPGetContentForKey<uint32_t>("vheight_u32", element, jError, jsonOK);
-    newContent.mVariables.mVBitsPerSec = EFPGetContentForKey<uint32_t>("vbps_u32", element, jError, jsonOK);
-    newContent.mVariables.mVFieldCount = EFPGetContentForKey<uint32_t>("vfiel_u32", element, jError, jsonOK);
+    newContent.mVariables.mVFrameRateNum = EFPGetContentForKey<uint32_t>(EFPStreamContent::vratenum_u32, element, jError, jsonOK);
+    newContent.mVariables.mVFrameRateDen = EFPGetContentForKey<uint32_t>(EFPStreamContent::vrateden_u32, element, jError, jsonOK);
+    newContent.mVariables.mVWidth = EFPGetContentForKey<uint32_t>(EFPStreamContent::vwidth_u32, element, jError, jsonOK);
+    newContent.mVariables.mVHeight = EFPGetContentForKey<uint32_t>(EFPStreamContent::vheight_u32, element, jError, jsonOK);
+    newContent.mVariables.mVBitsPerSec = EFPGetContentForKey<uint32_t>(EFPStreamContent::vbps_u32, element, jError, jsonOK);
+    newContent.mVariables.mVFieldCount = EFPGetContentForKey<uint32_t>(EFPStreamContent::vfiel_u32, element, jError, jsonOK);
 
     //Audio part
-    newContent.mVariables.mAFreq = EFPGetContentForKey<uint32_t>("afreq_u32", element, jError, jsonOK);
-    newContent.mVariables.mANoChannels = EFPGetContentForKey<uint32_t>("anoch_u32", element, jError, jsonOK);
-    newContent.mVariables.mAChannelMapping = EFPGetContentForKey<uint32_t>("achmap_u32", element, jError, jsonOK);
+    newContent.mVariables.mAFreq = EFPGetContentForKey<uint32_t>(EFPStreamContent::afreq_u32, element, jError, jsonOK);
+    newContent.mVariables.mANoChannels = EFPGetContentForKey<uint32_t>(EFPStreamContent::anoch_u32, element, jError, jsonOK);
+    newContent.mVariables.mAChannelMapping = EFPGetContentForKey<uint32_t>(EFPStreamContent::achmap_u32, element, jError, jsonOK);
 
     //Text part
-    std::string tmpStr = EFPGetContentForKey<std::string>("tlang_str", element, jError, jsonOK);
+    std::string tmpStr = EFPGetContentForKey<std::string>(EFPStreamContent::tlang_str, element, jError, jsonOK);
     if ((tmpStr.size() + 1) > sizeof(newContent.mVariables.mTLanguage)) {
         jError.push_back("tlang_str too large");
         jsonOK = false;
@@ -41,7 +41,7 @@ static void EFPSignalExtraktValuesForKeyV1(EFPStreamContent &newContent, json &e
         strncpy(&newContent.mVariables.mTLanguage[0], tmpStr.c_str(), tmpStr.size() + 1);
     }
 
-    tmpStr = EFPGetContentForKey<std::string>("ttextconfig_str", element, jError, jsonOK);
+    tmpStr = EFPGetContentForKey<std::string>(EFPStreamContent::ttextconfig_str, element, jError, jsonOK);
     if ((tmpStr.size() + 1) > sizeof(newContent.mVariables.mTextConfig)) {
         jError.push_back("ttextconfig_str too large");
         jsonOK = false;
@@ -50,9 +50,9 @@ static void EFPSignalExtraktValuesForKeyV1(EFPStreamContent &newContent, json &e
     }
 
     //auX part
-    newContent.mVariables.mXType = EFPGetContentForKey<uint32_t>("xtype_u32", element, jError, jsonOK);
+    newContent.mVariables.mXType = EFPGetContentForKey<uint32_t>(EFPStreamContent::xtype_u32, element, jError, jsonOK);
 
-    tmpStr = EFPGetContentForKey<std::string>("xstr_str", element, jError, jsonOK);
+    tmpStr = EFPGetContentForKey<std::string>(EFPStreamContent::xstr_str, element, jError, jsonOK);
     if ((tmpStr.size() + 1) > sizeof(newContent.mVariables.mXString)) {
         jError.push_back("xstr_str too large");
         jsonOK = false;
@@ -60,7 +60,7 @@ static void EFPSignalExtraktValuesForKeyV1(EFPStreamContent &newContent, json &e
         strncpy(&newContent.mVariables.mXString[0], tmpStr.c_str(), tmpStr.size() + 1);
     }
 
-    newContent.mVariables.mXValue = EFPGetContentForKey<uint32_t>("xval_u32", element, jError, jsonOK);
+    newContent.mVariables.mXValue = EFPGetContentForKey<uint32_t>(EFPStreamContent::xval_u32, element, jError, jsonOK);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -309,37 +309,37 @@ ElasticFrameMessages
 EFPSignalSend::generateJSONStreamInfoFromData(json &rJsonContent, EFPStreamContent &rStreamContent) {
 
     //General part
-    rJsonContent["gframecontent_u8"] = rStreamContent.mVariables.mGFrameContent;
-    rJsonContent["gstreamid_u8"] = rStreamContent.mVariables.mGStreamID;
-    rJsonContent["gchanged_u8"] = rStreamContent.mVariables.mGChanged;
-    rJsonContent["gprotectiongroup_u8"] = rStreamContent.mVariables.mGProtectionGroupID;
-    rJsonContent["ggroup_u8"] = rStreamContent.mVariables.mGGroupID;
-    rJsonContent["gpriority_u8"] = rStreamContent.mVariables.mGPriority;
-    rJsonContent["gnotifyhere_u64"] = rStreamContent.mVariables.mGNotifyHere;
-    rJsonContent["mgptsdtsbase_u32"] = rStreamContent.mVariables.mGPTSDTSBase;
+    rJsonContent[EFPStreamContent::gframecontent_u8] = rStreamContent.mVariables.mGFrameContent;
+    rJsonContent[EFPStreamContent::gstreamid_u8] = rStreamContent.mVariables.mGStreamID;
+    rJsonContent[EFPStreamContent::gchanged_u8] = rStreamContent.mVariables.mGChanged;
+    rJsonContent[EFPStreamContent::gprotectiongroup_u8] = rStreamContent.mVariables.mGProtectionGroupID;
+    rJsonContent[EFPStreamContent::ggroup_u8] = rStreamContent.mVariables.mGGroupID;
+    rJsonContent[EFPStreamContent::gpriority_u8] = rStreamContent.mVariables.mGPriority;
+    rJsonContent[EFPStreamContent::gnotifyhere_u64] = rStreamContent.mVariables.mGNotifyHere;
+    rJsonContent[EFPStreamContent::mgptsdtsbase_u32] = rStreamContent.mVariables.mGPTSDTSBase;
 
     //Video part
-    rJsonContent["vratenum_u32"] = rStreamContent.mVariables.mVFrameRateNum;
-    rJsonContent["vrateden_u32"] = rStreamContent.mVariables.mVFrameRateDen;
-    rJsonContent["vwidth_u32"] = rStreamContent.mVariables.mVWidth;
-    rJsonContent["vheight_u32"] = rStreamContent.mVariables.mVHeight;
-    rJsonContent["vbps_u32"] = rStreamContent.mVariables.mVBitsPerSec;
-    rJsonContent["vfiel_u32"] = rStreamContent.mVariables.mVFieldCount;
+    rJsonContent[EFPStreamContent::vratenum_u32] = rStreamContent.mVariables.mVFrameRateNum;
+    rJsonContent[EFPStreamContent::vrateden_u32] = rStreamContent.mVariables.mVFrameRateDen;
+    rJsonContent[EFPStreamContent::vwidth_u32] = rStreamContent.mVariables.mVWidth;
+    rJsonContent[EFPStreamContent::vheight_u32] = rStreamContent.mVariables.mVHeight;
+    rJsonContent[EFPStreamContent::vbps_u32] = rStreamContent.mVariables.mVBitsPerSec;
+    rJsonContent[EFPStreamContent::vfiel_u32] = rStreamContent.mVariables.mVFieldCount;
 
     //Audio part
-    rJsonContent["afreq_u32"] = rStreamContent.mVariables.mAFreq;
-    rJsonContent["anoch_u32"] = rStreamContent.mVariables.mANoChannels;
-    rJsonContent["achmap_u32"] = rStreamContent.mVariables.mAChannelMapping;
-    rJsonContent["abps_u32"] = rStreamContent.mVariables.mABitsPerSec;
+    rJsonContent[EFPStreamContent::afreq_u32] = rStreamContent.mVariables.mAFreq;
+    rJsonContent[EFPStreamContent::anoch_u32] = rStreamContent.mVariables.mANoChannels;
+    rJsonContent[EFPStreamContent::achmap_u32] = rStreamContent.mVariables.mAChannelMapping;
+    rJsonContent[EFPStreamContent::abps_u32] = rStreamContent.mVariables.mABitsPerSec;
 
     //Text part
-    rJsonContent["tlang_str"] = rStreamContent.mVariables.mTLanguage;
-    rJsonContent["ttextconfig_str"] = rStreamContent.mVariables.mTextConfig;
+    rJsonContent[EFPStreamContent::tlang_str] = rStreamContent.mVariables.mTLanguage;
+    rJsonContent[EFPStreamContent::ttextconfig_str] = rStreamContent.mVariables.mTextConfig;
 
     //auX part
-    rJsonContent["xtype_u32"] = rStreamContent.mVariables.mXType;
-    rJsonContent["xstr_str"] = rStreamContent.mVariables.mXString;
-    rJsonContent["xval_u32"] = rStreamContent.mVariables.mXValue;
+    rJsonContent[EFPStreamContent::xtype_u32] = rStreamContent.mVariables.mXType;
+    rJsonContent[EFPStreamContent::xstr_str] = rStreamContent.mVariables.mXString;
+    rJsonContent[EFPStreamContent::xval_u32] = rStreamContent.mVariables.mXValue;
     return ElasticFrameMessages::noError;
 }
 
@@ -367,9 +367,9 @@ ElasticFrameMessages EFPSignalSend::generateAllStreamInfoJSON(json &rJsonContent
             }
         }
     }
-    rJsonContent["efpstreamversion_u32"] = mEFPStreamListVersion;
-    rJsonContent["efpsignalversion_u32"] = EFP_SIGNAL_VERSION;
-    rJsonContent["efpstreams_arr"] = lTempStreams;
+    rJsonContent[EFPStreamContent::efpstreamversion_u32] = mEFPStreamListVersion;
+    rJsonContent[EFPStreamContent::efpsignalversion_u32] = EFP_SIGNAL_VERSION;
+    rJsonContent[EFPStreamContent::efpstreams_arr] = lTempStreams;
     return ElasticFrameMessages::noError;
 }
 
@@ -559,16 +559,16 @@ ElasticFrameMessages EFPSignalReceive::getStreamInformationJSON(uint8_t *data,
         return ElasticFrameMessages::dataNotJSON;
     }
 
-    rParsedData->mSignalVersion = EFPGetContentForKey<uint32_t>("efpsignalversion_u32", lJson, lJError, lJsonOK);
+    rParsedData->mSignalVersion = EFPGetContentForKey<uint32_t>(EFPStreamContent::efpsignalversion_u32, lJson, lJError, lJsonOK);
     if (!lJsonOK)
         return ElasticFrameMessages::noDataForKey;
-    rParsedData->mStreamVersion = EFPGetContentForKey<uint32_t>("efpstreamversion_u32", lJson, lJError, lJsonOK);
+    rParsedData->mStreamVersion = EFPGetContentForKey<uint32_t>(EFPStreamContent::efpstreamversion_u32, lJson, lJError, lJsonOK);
     if (!lJsonOK)
         return ElasticFrameMessages::noDataForKey;
-    //auto streams = getContentForKey<std::string>("efpstreams_arr", j, jError, jsonOK);
+    //auto streams = getContentForKey<std::string>(EFPStreamContent::efpstreams_arr, j, jError, jsonOK);
 
     try {
-        auto lStreams = lJson["efpstreams_arr"];
+        auto lStreams = lJson[EFPStreamContent::efpstreams_arr];
 
         for (auto &element : lStreams) {
             EFPStreamContent newContent(UINT32_MAX);

@@ -37,9 +37,9 @@ void contentDeclaration(std::unique_ptr<std::vector<uint8_t>> &rStreamContentDat
 
     std::cout << "Got OOB JSON." << std::endl;
     try {
-      for (auto &rItem: rJsonContent["efpstreams_arr"]) {
-        uint8_t changed = rItem["gchanged_u8"];
-        uint8_t streamID = rItem["gstreamid_u8"];
+      for (auto &rItem: rJsonContent[EFPStreamContent::efpstreams_arr]) {
+        uint8_t changed = rItem[EFPStreamContent::gchanged_u8];
+        uint8_t streamID = rItem[EFPStreamContent::gstreamid_u8];
 
         if (firstRun) {
           if (changed != 2 && streamID == 30) {
