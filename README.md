@@ -8,7 +8,7 @@ The EFPSignal is a control plane used by [ElasticFrameProtocol](https://github.c
 --------------------------------------------------------- ---     /\
 | Data type L | Data type L | Data type F | Data type Q |     |  /  \
 ---------------------------------------------------------  E  |   ||
-|                     EFPSignal (Wrapper)               |  F  |   ||
+|                     EFPSignal (Wraps EFP)             |  F  |   ||
 |     ---------------------------------------------     |  P  |   ||
 |     |                                            |    |  S  |   ||
 |     |              ElasticFrameProtocol          |    |  i  |   ||
@@ -107,22 +107,33 @@ uint32_t signalVersion();
 //
 
 // Drop unknown data
-bool mDropUnknown = false;
+//false = do not drop
+//true = drop
+bool mDropUnknown;
 
 //Auto register unknown data (callback is triggered if unknown data appears)
-bool mAutoRegister = true;
+//false = register manually
+//true = auto-register
+bool mAutoRegister;
 
 // Put current declaration in EFP-Stream id 0
-bool mEmbeddInStream = true;
+//false = do not embed in stream
+//true = embed in stream
+bool mEmbeddInStream;
 
 // Only send declaration if changes are seen 
-bool mEmbeddOnlyChanges = false;
+//false = send all data
+//true = send only changes
+bool mEmbeddOnlyChanges;
 
 //Embed binary else JSON format is selected
-bool mEmbeddBinary = false;
+//false = JSON format used
+//true = binary format used
+bool mEmbeddBinary;
 
-//Embed binary else JSON format is selected
-uint32_t mEmbedInterval100msSteps = 1;
+//Declaration interval
+//number = 100ms * the number is used as interval for sending declarations.
+uint32_t mEmbedInterval100msSteps = number;
 
 
 ```
@@ -201,7 +212,7 @@ Add header file to your project.
 
 ## History
 
-The data content framed using ElasticFrameProtocol is promiscuously added and transported. The receiver is also given what is sent without any declaration of the content. EFPSignal is helping out declaring content and letting only known content pass if configured that way. When using MPEG-TS PAT and PMT has been used to declare content extended by using private data. The older declaration and signaling of media was designed in a simplex world. EFPSignal on the other hand is designed for duplex IP networks for OOB and IB signaling using JSON or binary data types. This enables more flexible ways of working with media flows. For example, a receiver can subscribe to content after receiving the declaration and deciding on what content to subscribe to. It’s also possible to dynamically subscribe and delete content for creating flows adapting to the capacity of the network or the capabilities of the data consumer.  
+The data content framed using ElasticFrameProtocol is promiscuously added and transported. The receiver is also given what is sent without any declaration of the content. EFPSignal is helping out declaring content and filtering streams of data if configured that way. When using MPEG-TS PAT and PMT has been used to declare content extended by using private data. The older declaration and signaling of media was designed in a simplex world. EFPSignal on the other hand is designed for duplex IP networks for OOB and IB signaling using JSON or binary data types. This enables more flexible ways of working with media flows (pub/sub). For example, a receiver can subscribe to content after receiving the declaration and deciding on what content to subscribe to. It’s also possible to dynamically subscribe and delete content for creating flows adapting to the capacity of the network or the capabilities of the consumer.  
 
 
 ## Credits
