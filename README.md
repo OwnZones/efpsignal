@@ -143,7 +143,9 @@ uint32_t mEmbedInterval100msSteps = number;
 ```cpp
 
 // Create your reciever. Just as you do with EFP.
-EFPSignalReceive myEFPSignalReceive(5,2);
+// additional optional parameters exists such as context and 
+// configuring run to completion 
+EFPSignalReceive myEFPSignalReceive(50,20);
 
 
 // Register your callback where you recieve in-band signaling 
