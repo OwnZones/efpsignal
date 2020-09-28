@@ -323,7 +323,7 @@ public:
      * @param setMTU is the MTU used by ElasticFrameProtocolSender
      * @param garbageCollectms is the number of ms to set the TTL to when detecting new content.
      */
-    explicit EFPSignalSend(uint16_t setMTU, uint32_t garbageCollectms);
+    explicit EFPSignalSend(uint16_t setMTU, uint32_t garbageCollectms = 5000, std::shared_ptr<ElasticFrameProtocolContext> pCTX = nullptr);
 
     ///Destructor
     ~EFPSignalSend() override;
@@ -453,10 +453,10 @@ public:
     uint32_t signalVersion();
 
     ///Callback for filling out stream declarations if mAutoRegister is set to true and new content is detected
-    std::function<bool(EFPStreamContent &content)> declareContentCallback = nullptr;
+    std::function<bool(EFPStreamContent &content, ElasticFrameProtocolContext* pCTX)> declareContentCallback = nullptr;
     ///if mEmbedInStream is false this callback is triggered instead for OOB usage of declarations
     std::function<void(std::unique_ptr<std::vector<uint8_t>> &rStreamContentData,
-                       json &rJsonContent)> declarationCallback = nullptr;
+                       json &rJsonContent, ElasticFrameProtocolContext* pCTX)> declarationCallback = nullptr;
 
     ///Delete copy and move constructors and assign operators
     EFPSignalSend(EFPSignalSend const &) = delete;              // Copy construct
@@ -536,7 +536,7 @@ public:
     };
 
     ///Constructor
-    explicit EFPSignalReceive(uint32_t bucketTimeoutMaster, uint32_t holTimeoutMaster);
+    explicit EFPSignalReceive(uint32_t bucketTimeoutMaster = 100, uint32_t holTimeoutMaster = 0, std::shared_ptr<ElasticFrameProtocolContext> pCTX = nullptr, EFPReceiverMode lReceiverMode = EFPReceiverMode::THREADED);
 
     ///Destructor
     ~EFPSignalReceive() override;
@@ -580,9 +580,9 @@ public:
     uint32_t signalVersion();
 
     ///Overrides the EFP receiveCallback for parsing EFPSignal messages and declarations.
-    std::function<void(pFramePtr & rPacket)> receiveCallback = nullptr;
+    std::function<void(pFramePtr & rPacket, ElasticFrameProtocolContext* pCTX)> receiveCallback = nullptr;
     ///Callback for embedded content declarations (not nullable)
-    std::function<void(std::unique_ptr<EFPSignalReceiveData> &data)> contentInformationCallback = nullptr;
+    std::function<void(std::unique_ptr<EFPSignalReceiveData> &data, ElasticFrameProtocolContext* pCTX)> contentInformationCallback = nullptr;
 
     ///Delete copy and move constructors and assign operators
     EFPSignalReceive(EFPSignalReceive const &) = delete;              // Copy construct
@@ -600,10 +600,10 @@ private:
 class EFPSignalDuplex {
 public:
     /// Constructor. Bucket time out, head of line blocking time out, mtu and EFP signal time out
-    explicit EFPSignalDuplex(uint32_t bucketTimeoutMaster, uint32_t holTimeoutMaster, uint16_t setMTU,
-                             uint32_t garbageCollectms) {
-        mEFPSend = std::make_shared<EFPSignalSend>(setMTU, garbageCollectms);
-        mEFPReceive = std::make_shared<EFPSignalReceive>(bucketTimeoutMaster, holTimeoutMaster);
+    explicit EFPSignalDuplex(uint32_t bucketTimeoutMaster = 100, uint32_t holTimeoutMaster = 0, uint16_t setMTU = 1000,
+                             uint32_t garbageCollectms = 5000, std::shared_ptr<ElasticFrameProtocolContext> pCTX = nullptr, EFPSignalReceive::EFPReceiverMode lReceiverMode = EFPSignalReceive::EFPReceiverMode::THREADED) {
+        mEFPSend = std::make_shared<EFPSignalSend>(setMTU, garbageCollectms, pCTX);
+        mEFPReceive = std::make_shared<EFPSignalReceive>(bucketTimeoutMaster, holTimeoutMaster, pCTX, lReceiverMode);
         mEFPReceive->setSenderBinding(mEFPSend);
     }
 

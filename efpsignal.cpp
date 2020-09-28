@@ -71,7 +71,7 @@ static void EFPSignalExtraktValuesForKeyV1(EFPStreamContent &newContent, json &e
 //
 //---------------------------------------------------------------------------------------------------------------------
 
-EFPSignalSend::EFPSignalSend(uint16_t setMTU, uint32_t garbageCollectms) : ElasticFrameProtocolSender(setMTU) {
+EFPSignalSend::EFPSignalSend(uint16_t setMTU, uint32_t garbageCollectms, std::shared_ptr<ElasticFrameProtocolContext> pCTX) : ElasticFrameProtocolSender(setMTU, pCTX) {
     mEFPStreamLists.resize(256);
     mGarbageCollectms = garbageCollectms;
     startSignalWorker();
@@ -118,7 +118,7 @@ EFPSignalSend::signalFilter(ElasticFrameContent dataContent, uint8_t streamID, u
             lNewContent.mVariables.mGStreamID = streamID;
             lNewContent.mVariables.mGFrameContent = dataContent;
             if (declareContentCallback) {
-                lNewContent.mWhiteListed = declareContentCallback(lNewContent);
+                lNewContent.mWhiteListed = declareContentCallback(lNewContent, mCTX ? mCTX.get() : nullptr);
             }
             lNewContent.mVariables.mGChanged = 1;
             mEFPStreamLists[streamID].push_back(lNewContent);
@@ -442,7 +442,7 @@ ElasticFrameMessages EFPSignalSend::sendEmbeddedData(bool deltasOnly) {
             } else {
                 if (declarationCallback) {
                     json lNothing;
-                    declarationCallback(lRawData, lNothing);
+                    declarationCallback(lRawData, lNothing, mCTX ? mCTX.get() : nullptr);
                 }
             }
         }
@@ -463,7 +463,7 @@ ElasticFrameMessages EFPSignalSend::sendEmbeddedData(bool deltasOnly) {
             } else {
                 if (declarationCallback) {
                     std::unique_ptr<std::vector<uint8_t>> lNothing = nullptr;
-                    declarationCallback(lNothing, lEmbeddedData);
+                    declarationCallback(lNothing, lEmbeddedData, mCTX ? mCTX.get() : nullptr);
                 }
             }
         }
@@ -531,8 +531,8 @@ void EFPSignalSend::startSignalWorker() {
 //
 //---------------------------------------------------------------------------------------------------------------------
 
-EFPSignalReceive::EFPSignalReceive(uint32_t bucketTimeoutMaster, uint32_t holTimeoutMaster)
-        : ElasticFrameProtocolReceiver(bucketTimeoutMaster, holTimeoutMaster) {
+EFPSignalReceive::EFPSignalReceive(uint32_t bucketTimeoutMaster, uint32_t holTimeoutMaster, std::shared_ptr<ElasticFrameProtocolContext> pCTX, EFPReceiverMode lReceiverMode)
+        : ElasticFrameProtocolReceiver(bucketTimeoutMaster, holTimeoutMaster, pCTX, lReceiverMode) {
     ElasticFrameProtocolReceiver::receiveCallback = std::bind(&EFPSignalReceive::gotData, this, std::placeholders::_1);
     EFP_LOGGER(true, LOGG_NOTIFY, "EFPSignalReceive construct")
 }
@@ -673,7 +673,7 @@ void EFPSignalReceive::gotData(ElasticFrameProtocolReceiver::pFramePtr &packet) 
                 EFP_LOGGER(true, LOGG_ERROR, "Unknown EFPStreamContent")
                 return;
             }
-            this->contentInformationCallback(lMyData);
+            this->contentInformationCallback(lMyData, mCTX ? mCTX.get() : nullptr);
             return;
         } else {
             EFP_LOGGER(true, LOGG_ERROR, "contentInformationCallback not defined")
@@ -681,7 +681,7 @@ void EFPSignalReceive::gotData(ElasticFrameProtocolReceiver::pFramePtr &packet) 
         }
     }
     if (this->receiveCallback) {
-        this->receiveCallback(packet);
+        this->receiveCallback(packet, mCTX ? mCTX.get() : nullptr);
     }
 }
 

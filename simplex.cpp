@@ -3,7 +3,7 @@
 
 #define MTU 1456 //SRT-max
 
-EFPSignalReceive myEFPSignalReceive(5,2); //Needs to be destructed after the sender to avoid races in the tests.
+EFPSignalReceive myEFPSignalReceive(50,20); //Needs to be destructed after the sender to avoid races in the tests.
 bool testFail;
 bool firstRun;
 
