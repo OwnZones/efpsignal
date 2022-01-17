@@ -1,8 +1,4 @@
-// EFPSignal
-//
-// UnitX Edgeware AB 2020
-//
-
+// Copyright Edgeware AB 2020, Agile Content 2021-2022
 #ifndef EFPSIGNAL__EFPSIGNAL_H
 #define EFPSIGNAL__EFPSIGNAL_H
 
@@ -275,11 +271,6 @@ private:
  * EFPSignalSend is subclassing ElasticFrameProtocolSender and overloads 'the pack and send' methods
  * EFPSignalSend registers and filters the elementary data based on user settings
  *
- * \author UnitX
- *
- * Contact: bitbucket:andersced
- * or-> anders dot cedronius at edgeware dot tv
- *
  */
 class EFPSignalSend : public ElasticFrameProtocolSender {
 public:
@@ -519,9 +510,6 @@ private:
  *
  * ElasticFrameProtocolSender can be used to frame elementary streams to EFP fragments for transport over any network technology
  *
- * \author UnitX
- *
- * Contact: bitbucket:andersced
  *
  */
 class EFPSignalReceive : public ElasticFrameProtocolReceiver {
