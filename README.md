@@ -2,7 +2,7 @@
 
 # EFPSignal
 
-The EFPSignal is a control plane used by [ElasticFrameProtocol](https://github.com/Unit-X/efp).
+The EFPSignal is a control plane used by [ElasticFrameProtocol](https://github.com/agilecontent/efp).
 
 ```
 --------------------------------------------------------- ---     /\
@@ -169,7 +169,7 @@ Add this in your CMake file.
 #Include EFPSignal
 include(ExternalProject)
 ExternalProject_Add(project_efpsignal
-        GIT_REPOSITORY https://github.com/Unit-X/efpsignal.git
+        GIT_REPOSITORY https://github.com/agilecontent/efpsignal.git
         GIT_SUBMODULES ""
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/efpsignal
         BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/efpsignal
@@ -214,15 +214,12 @@ Add header file to your project.
 
 ## History
 
-The data content framed using ElasticFrameProtocol is promiscuously added and transported. The receiver is also given what is sent without any declaration of the content. EFPSignal is helping out declaring content and filtering streams of data if configured that way. When using MPEG-TS PAT and PMT has been used to declare content extended by using private data. The older declaration and signaling of media was designed in a simplex world. EFPSignal on the other hand is designed for duplex IP networks for OOB and IB signaling using JSON or binary data types. This enables more flexible ways of working with media flows (pub/sub). For example, a receiver can subscribe to content after receiving the declaration and deciding on what content to subscribe to. It’s also possible to dynamically subscribe and delete content for creating flows adapting to the capacity of the network or the capabilities of the consumer.  
+The data content framed using ElasticFrameProtocol is promiscuously added and transported. The receiver is also given what is sent without any declaration of the content. EFPSignal is helping out declaring content and filtering streams of data if configured that way. When using MPEG-TS PAT and PMT has been used to declare content extended by using private data. The older declaration and signaling of media was designed in a simplex world. EFPSignal on the other hand is designed for duplex IP networks for OOB and IB signaling using JSON or binary data types. This enables more flexible ways of working with media flows (pub/sub). For example, a receiver can subscribe to content after receiving the declaration and deciding on what content to subscribe to. It’s also possible to dynamically subscribe and delete content for creating flows adapting to the capacity of the network or the capabilities of the consumer.
 
 
 ## Credits
 
-The UnitX team at Edgeware AB
-
-Maintainer: anders.cedronius(at)edgeware.tv
-
+The UnitX team at Edgeware AB, from 2021 part of Agile Content
 
 ## License
 
