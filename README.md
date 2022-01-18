@@ -24,7 +24,7 @@ The EFPSignal is a control plane used by [ElasticFrameProtocol](https://github.c
 EFPSignal wraps around ElasticFrameProtocol to intercept and notify the user about the dataflow between the data producers / consumers and the underlying network layer. The signaling can be Out-Of-Band or In-Band. The illustration tries to illustrate this.
 
 
-Please read -> [**EFPSignal**](https://edgeware-my.sharepoint.com/:p:/g/personal/anders_cedronius_edgeware_tv/EeyFJfg6nZZKmH57dEeTOvgBig-wztXvRa82S4NKHfFiCA?e=yZgxiz) for more information.
+Please read -> [**EFPSignal**](https://github.com/agilecontent/efpsignal/blob/master/docs/EFPSignalPlugin.pdf) for more information.
 
 
 ## Installation
@@ -225,4 +225,4 @@ The UnitX team at Edgeware AB, from 2021 part of Agile Content
 
 *MIT*
 
-Read *LICENCE.md* for details
+Read *LICENSE.md* for details
