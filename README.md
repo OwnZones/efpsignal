@@ -2,7 +2,7 @@
 
 # EFPSignal
 
-The EFPSignal is a control plane used by [ElasticFrameProtocol](https://github.com/agilecontent/efp).
+The EFPSignal is a control plane used by [ElasticFrameProtocol](https://github.com/OwnZones/efp).
 
 ```
 --------------------------------------------------------- ---     /\
@@ -24,7 +24,7 @@ The EFPSignal is a control plane used by [ElasticFrameProtocol](https://github.c
 EFPSignal wraps around ElasticFrameProtocol to intercept and notify the user about the dataflow between the data producers / consumers and the underlying network layer. The signaling can be Out-Of-Band or In-Band. The illustration tries to illustrate this.
 
 
-Please read -> [**EFPSignal**](https://github.com/agilecontent/efpsignal/blob/master/docs/EFPSignalPlugin.pdf) for more information.
+Please read -> [**EFPSignal**](https://github.com/OwnZones/efpsignal/blob/master/docs/EFPSignalPlugin.pdf) for more information.
 
 
 ## Installation
@@ -49,12 +49,12 @@ cmake -DCMAKE_BUILD_TYPE=Debug ..
 cmake --build . --config Debug
 ```
 
-Output: 
+Output:
 
 **(platform specific)efpsignal.(platform specific)** (Linux/MacOS -> libefpsignal.a)
 
 The static EFPSignal library
- 
+
 **efpsignalsimplextests**
 
 *efpsignalsimplextests* (executable) runs trough the simplex unit tests and returns EXIT_SUCESS if all unit tests pass.
@@ -73,16 +73,16 @@ The EFPSignal class subclassing ElasticFrameProtocol. Use EFPSignal just as you 
 **Sender:**
 
 ```cpp
-// Create your sender. Just as you do with EFP but now with the addition of 
+// Create your sender. Just as you do with EFP but now with the addition of
 // a parameter (5000 in this example).
-// This parameter is defining the time-out (ms) of content auto-declared. 
+// This parameter is defining the time-out (ms) of content auto-declared.
 
 EFPSignalSend myEFPSignalSend(MTU, 5000);
 
 // Register your callback
 myEFPSignalSend.declareContentCallback = std::bind(&declareContent, std::placeholders::_1);
 
-// This callback is triggered when new content is seen 
+// This callback is triggered when new content is seen
 
 // You can manually declare content by using the method
 ElasticFrameMessages registerContent(EFPStreamContent &content);
@@ -121,7 +121,7 @@ bool mAutoRegister;
 //true = embed in stream
 bool mEmbeddInStream;
 
-// Only send declaration if changes are seen 
+// Only send declaration if changes are seen
 //false = send all data
 //true = send only changes
 bool mEmbeddOnlyChanges;
@@ -143,12 +143,12 @@ uint32_t mEmbedInterval100msSteps = number;
 ```cpp
 
 // Create your reciever. Just as you do with EFP.
-// additional optional parameters exists such as context and 
-// configuring run to completion 
+// additional optional parameters exists such as context and
+// configuring run to completion
 EFPSignalReceive myEFPSignalReceive(50,20);
 
 
-// Register your callback where you recieve in-band signaling 
+// Register your callback where you recieve in-band signaling
 //For OOB this callback is not needed
 myEFPSignalReceive.contentInformationCallback = std::bind(&gotContentInformation, std::placeholders::_1);
 
@@ -156,12 +156,12 @@ myEFPSignalReceive.contentInformationCallback = std::bind(&gotContentInformation
 ElasticFrameMessages getStreamInformation(uint8_t *data, size_t size, std::unique_ptr<EFPSignalReceiveData>& parsedData);
 
 ```
- 
+
 
 
 ## Using EFPSignal in your CMake project
 
-* **Step1** 
+* **Step1**
 
 Add this in your CMake file.
 
@@ -169,7 +169,7 @@ Add this in your CMake file.
 #Include EFPSignal
 include(ExternalProject)
 ExternalProject_Add(project_efpsignal
-        GIT_REPOSITORY https://github.com/agilecontent/efpsignal.git
+        GIT_REPOSITORY https://github.com/OwnZones/efpsignal.git
         GIT_SUBMODULES ""
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/efpsignal
         BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/efpsignal
@@ -192,10 +192,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/efpsignal/json/)
 Link your library or executable.
 
 ```
-target_link_libraries((your target) efpsignal (the rest you want to link)) 
+target_link_libraries((your target) efpsignal (the rest you want to link))
 ```
 
-* **Step3** 
+* **Step3**
 
 Add header file to your project.
 
