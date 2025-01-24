@@ -219,7 +219,7 @@ The data content framed using ElasticFrameProtocol is promiscuously added and tr
 
 ## Credits
 
-The UnitX team at Edgeware AB, from 2021 part of Agile Content
+The Ateliere Live development team.
 
 ## License
 
